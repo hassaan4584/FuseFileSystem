@@ -87,7 +87,7 @@ static struct fuse_operations hello_oper = {
 	.getattr	= hello_getattr,
 	.readdir	= hello_readdir,
 	.open		= hello_open,
-//	.read		= hello_read,
+	.read		= hello_read,
 };
 
 int main(int argc, char *argv[])
