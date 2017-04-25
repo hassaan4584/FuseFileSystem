@@ -1,13 +1,13 @@
 //
-//  helpers.h
+//  fuse_helpers.h
 //  OSA3
 //
 //  Created by Hassaan on 25/04/2017.
 //  Copyright © 2017 HaigaTech. All rights reserved.
 //
 
-#ifndef helpers_h
-#define helpers_h
+#ifndef fuse_helpers_h
+#define fuse_helpers_h
 
 
 
@@ -45,6 +45,12 @@ static int haiga_access(const char* path, int mask)
 }
 
 //Make a special (device) file, FIFO, or socket. See mknod(2) for details. This function is rarely needed, since it's uncommon to make these objects inside special-purpose filesystems.
+/** Create a file node
+ *
+ * This is called for creation of all non-directory, non-symlink
+ * nodes.  If the filesystem defines a create() method, then for
+ * regular files that will be called instead.
+ */
 static int haiga_mknod(const char* path, mode_t mode, dev_t rdev)
 {
     printf("mknod FUNCTION \n");
@@ -131,6 +137,8 @@ static int haiga_bmap(const char* path, size_t blocksize, uint64_t* blockno)
 
 
 // Set an extended attribute. See setxattr(2). This should be implemented only if HAVE_SETXATTR is true.
+
+
 static int haiga_setxattr(const char* path, const char* name, const char* value, size_t size, int flags, uint32_t position)
 {
     printf("SETXATTR FUNCTION \n");
@@ -174,6 +182,89 @@ static int haiga_create(const char *path, mode_t mod, struct fuse_file_info *fi)
 //    return 0;
 //}
 
+/** Read the target of a symbolic link
+ *
+ * The buffer should be filled with a null terminated string.  The
+ * buffer size argument includes the space for the terminating
+ * null character.	If the linkname is too long to fit in the
+ * buffer, it should be truncated.	The return value should be 0
+ * for success.
+ */
+
+static int haiga_readlink(const char *path, char *buf, size_t size)
+{
+    printf("READLINK FUNCTION \n");
+
+    
+    return 0;
+}
+
+/** Create a directory */
+ int haiga_mkdir(const char * path, mode_t mode)
+{
+    printf("READLINK FUNCTION \n");
+    
+    return 0;
+}
+
+/** Remove a file */
+static int haiga_unlink(const char *path)
+{
+    printf("READLINK FUNCTION \n");
+    
+    return 0;
+}
+
+/** Remove a directory */
+static int haiga_rmdir(const char *path)
+{
+    printf("READLINK FUNCTION \n");
+    
+    return 0;
+}
+
+/** Create a hard link to a file */
+static int haiga_link(const char *unknown1, const char *unknown2)
+{
+    printf("READLINK FUNCTION \n");
+
+    return 0;
+}
+
+/** Change the permission bits of a file */
+static int haiga_chmod(const char *path, mode_t mode)
+{
+    printf("READLINK FUNCTION \n");
+
+    return 0;
+}
+
+/** Change the owner and group of a file */
+static int haiga_chown(const char *path, uid_t uid, gid_t gid)
+{
+    printf("READLINK FUNCTION \n");
+
+    return 0;
+}
+
+/** Change the size of a file */
+static int haiga_truncate(const char *path, off_t offset)
+{
+    printf("READLINK FUNCTION \n");
+    
+    return 0;
+}
 
 
-#endif /* helpers_h */
+
+/** Create a symbolic link */
+//int (*symlink) (const char *, const char *);
+//
+///** Rename a file */
+//int (*rename) (const char *, const char *);
+
+
+
+
+
+#endif /* fuse_helpers_h */
