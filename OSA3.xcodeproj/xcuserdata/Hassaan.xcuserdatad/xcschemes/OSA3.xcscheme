@@ -63,7 +63,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/Users/Hassaan/Desktop/FuseMount2"
+            argument = "/Users/Hassaan/Desktop/Mount3"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-d"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-s"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
