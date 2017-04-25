@@ -20,7 +20,7 @@
 
 static const char *haiga_str = "Hello World!\n";
 static const char *haiga_path = "/hello";
-static char fileNamesArr[MAX_FILE_COUNT][MAX_FILE_SIZE];
+static char fileNamesArr[FILE_COUNT][MAX_FILE_SIZE];
 
 
 static int haiga_getattr(const char *path, struct stat *stbuf)
@@ -41,7 +41,7 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
         return res;
     }
     else {
-        for (int i=0; i<40 ; i++) {
+        for (int i=0; i<FILE_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 stbuf->st_mode = S_IFREG | 0777;
                 stbuf->st_nlink = 1;
@@ -70,7 +70,7 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 	filler(buf, haiga_path + 1, NULL, 0);
-    for(int i=0 ; i<40 ; i++) {
+    for(int i=0 ; i<FILE_COUNT ; i++) {
         filler(buf, fileNamesArr[i] + 1, NULL, 0);
     }
 	return 0;
@@ -149,7 +149,7 @@ static struct fuse_operations haiga_operations = {
 
 int main(int argc, char *argv[])
 {
-    for(int i=0 ; i<40 ; i++) {
+    for(int i=0 ; i<FILE_COUNT ; i++) {
         sprintf(fileNamesArr[i], "/%d", i);
     }
 

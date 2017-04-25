@@ -10,7 +10,7 @@
 #define Constants_h
 
 const int MAX_FILE_SIZE     = 1024;
-const int MAX_FILE_COUNT    = 40;
+const int FILE_COUNT    = 40;
 
 
 #endif /* Constants_h */
