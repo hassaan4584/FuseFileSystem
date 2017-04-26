@@ -10,9 +10,9 @@
 #define Constants_h
 
 const int MAX_FILE_SIZE     = 1024;
-const int FILE_COUNT        = 40;
+const int FILE_COUNT        = 2;
 
-const char* LOG_FILE_PATH   = "/Users/Hassaan/Desktop/haiga_lfs.txt";
+const char* LOG_FILE_PATH   = "/Users/Hassaan/Desktop/haiga_lfs.rtf";
 
 
 #endif /* Constants_h */

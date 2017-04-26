@@ -42,7 +42,7 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
         return res;
     }
     else {
-        for (int i=0; i<FILE_COUNT+3 ; i++) {
+        for (int i=0; i<FILE_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 stbuf->st_mode = S_IFREG | 0636;
                 stbuf->st_nlink = 1;
@@ -145,9 +145,7 @@ static struct fuse_operations haiga_operations = {
     .chmod      = haiga_chmod,
     .chown      = haiga_chown,
     .truncate   = haiga_truncate,
-    .utimens    = haiga_utimens,
-    .rename     = haiga_rename,
-    .symlink    = haiga_symlink,
+    
     
 };
 
@@ -157,24 +155,8 @@ int main(int argc, char *argv[])
         sprintf(fileNamesArr[i], "/%d", i);
     }
     
-//    logFd = open(LOG_FILE_PATH, O_RDWR);
-    FILE *file = fopen(LOG_FILE_PATH, "w+");
-    if (file == NULL) {
-        printf("LOG FILE COULD FAILED TO OPEN");
+    logFd = open(LOG_FILE_PATH, O_RDWR);
 
-    }
     
-    if (logFd < 0) {
-        printf("LOG FILE COULD FAILED TO OPEN");
-    }
-    for (int i=0 ; i<FILE_COUNT ; i++) {
-        fseek(file, i*1024, SEEK_SET);
-        const char buff[] = "This is some text\n";
-        fwrite((void*)buff, sizeof(char), sizeof(buff), file);
-    }
-    fclose(file);
-
-    int retVal = fuse_main(argc, argv, &haiga_operations, NULL);
-//    close(logFd);
-    return retVal;
+	return fuse_main(argc, argv, &haiga_operations, NULL);
 }
