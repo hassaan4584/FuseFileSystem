@@ -177,10 +177,10 @@ static int haiga_create(const char *path, mode_t mod, struct fuse_file_info *fi)
 }
 
 // Poll for I/O readiness. If ph is non-NULL, when the filesystem is ready for I/O it should call fuse_notify_poll (possibly asynchronously) with the specified ph; this will clear all pending polls. The callee is responsible for destroying ph with fuse_pollhandle_destroy() when ph is no longer needed.
-//static int haiga_poll(const char* path, struct fuse_file_info* fi, struct fuse_pollhandle* ph, unsigned* reventsp)
-//{
-//    return 0;
-//}
+static int haiga_poll(const char* path, struct fuse_file_info* fi, struct fuse_pollhandle* ph, unsigned* reventsp)
+{
+    return 0;
+}
 
 /** Read the target of a symbolic link
  *
@@ -202,15 +202,15 @@ static int haiga_readlink(const char *path, char *buf, size_t size)
 /** Create a directory */
  int haiga_mkdir(const char * path, mode_t mode)
 {
-    printf("READLINK FUNCTION \n");
-    
+    printf("MKDIR FUNCTION \n");
+    mode = S_IFDIR | 0755;
     return 0;
 }
 
 /** Remove a file */
 static int haiga_unlink(const char *path)
 {
-    printf("READLINK FUNCTION \n");
+    printf("UNLINK FUNCTION \n");
     
     return 0;
 }
@@ -218,7 +218,7 @@ static int haiga_unlink(const char *path)
 /** Remove a directory */
 static int haiga_rmdir(const char *path)
 {
-    printf("READLINK FUNCTION \n");
+    printf("RMDIR FUNCTION \n");
     
     return 0;
 }
@@ -226,7 +226,7 @@ static int haiga_rmdir(const char *path)
 /** Create a hard link to a file */
 static int haiga_link(const char *unknown1, const char *unknown2)
 {
-    printf("READLINK FUNCTION \n");
+    printf("LINK FUNCTION \n");
 
     return 0;
 }
@@ -234,7 +234,7 @@ static int haiga_link(const char *unknown1, const char *unknown2)
 /** Change the permission bits of a file */
 static int haiga_chmod(const char *path, mode_t mode)
 {
-    printf("READLINK FUNCTION \n");
+    printf("CHMOD FUNCTION \n");
 
     return 0;
 }
@@ -242,7 +242,7 @@ static int haiga_chmod(const char *path, mode_t mode)
 /** Change the owner and group of a file */
 static int haiga_chown(const char *path, uid_t uid, gid_t gid)
 {
-    printf("READLINK FUNCTION \n");
+    printf("CHOWN FUNCTION \n");
 
     return 0;
 }
@@ -250,7 +250,7 @@ static int haiga_chown(const char *path, uid_t uid, gid_t gid)
 /** Change the size of a file */
 static int haiga_truncate(const char *path, off_t offset)
 {
-    printf("READLINK FUNCTION \n");
+    printf("TRUNCATE FUNCTION \n");
     
     return 0;
 }
@@ -263,7 +263,7 @@ static int haiga_truncate(const char *path, off_t offset)
  */
 static int haiga_utimens(const char *path, const struct timespec tv[2])
 {
-    printf("UTIEMS FUNCTION \n");
+    printf("UTIMENS FUNCTION \n");
    
     
     return 0;
@@ -273,10 +273,20 @@ static int haiga_utimens(const char *path, const struct timespec tv[2])
 
 
 /** Create a symbolic link */
-//int (*symlink) (const char *, const char *);
-//
-///** Rename a file */
-//int (*rename) (const char *, const char *);
+static int haiga_symlink(const char *x, const char *y)
+{
+    printf("SYMLINK FUNCTION \n");
+    
+    return 0;
+}
+
+/** Rename a file */
+int haiga_rename(const char *x, const char *y)
+{
+    printf("RENAME FUNCTION \n");
+
+    return 0;
+}
 
 
 
