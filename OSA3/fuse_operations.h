@@ -1,13 +1,13 @@
 //
-//  fuse_helpers.h
+//  fuse_operations.h
 //  OSA3
 //
 //  Created by Hassaan on 25/04/2017.
 //  Copyright © 2017 HaigaTech. All rights reserved.
 //
 
-#ifndef fuse_helpers_h
-#define fuse_helpers_h
+#ifndef fuse_operations_h
+#define fuse_operations_h
 
 
 
@@ -254,6 +254,21 @@ static int haiga_truncate(const char *path, off_t offset)
     
     return 0;
 }
+
+/**
+ * Change the access and modification times of a file with
+ * nanosecond resolution
+ *
+ * Introduced in version 2.6
+ */
+static int haiga_utimens(const char *path, const struct timespec tv[2])
+{
+    printf("UTIEMS FUNCTION \n");
+   
+    
+    return 0;
+}
+
 
 
 

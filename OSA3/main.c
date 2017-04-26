@@ -15,7 +15,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include "fuse_helpers.h"
+#include "fuse_operations.h"
 #include "Constants.h"
 
 static const char *haiga_str = "Hello World!\n";
@@ -84,8 +84,8 @@ static int haiga_open(const char *path, struct fuse_file_info *fi)
 	if (strcmp(path, haiga_path) != 0)
 		return -ENOENT;
 
-	if ((fi->flags & 3) != O_RDONLY)
-		return -EACCES;
+//	if ((fi->flags & 3) != O_RDONLY)
+//		return -EACCES;
 
 	return 0;
 }
