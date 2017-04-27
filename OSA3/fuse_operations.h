@@ -8,7 +8,7 @@
 
 #ifndef fuse_operations_h
 #define fuse_operations_h
-
+#include "Constants.h"
 
 
 // Called when the filesystem exits. The private_data comes from the return value of init.
@@ -68,6 +68,34 @@ static int haiga_mknod(const char* path, mode_t mode, dev_t rdev)
 static int haiga_write(const char* path, const char *buf, size_t size, off_t offset, struct fuse_file_info* fi)
 {
     printf("WRITE FUNCTION \n");
+    
+    int fileNumber = -1;
+    int isFileFound = 0;
+//    if (strcmp(path, haiga_path) != 0) {
+        for (int i=0; i<FILE_COUNT ; i++) {
+            if (strcmp(path, fileNamesArr[i]) == 0) {
+                isFileFound = 1;
+                fileNumber = i;
+            }
+        }
+        if (isFileFound == 0) {
+            return -ENOENT;
+        }
+//    }
+//    if (fi->flags == O_RDONLY)
+//        return -EACCES;
+
+    
+    size_t len = strlen(fileDataArr[fileNumber]);
+    if (offset < len) {
+        if (offset + size > len)
+            size = len - offset;
+        memcpy(fileDataArr[fileNumber] + offset, buf, size);
+    } else
+        size = 0;
+    
+    return (int)size;
+
     
     return 1;
 }
@@ -177,10 +205,10 @@ static int haiga_create(const char *path, mode_t mod, struct fuse_file_info *fi)
 }
 
 // Poll for I/O readiness. If ph is non-NULL, when the filesystem is ready for I/O it should call fuse_notify_poll (possibly asynchronously) with the specified ph; this will clear all pending polls. The callee is responsible for destroying ph with fuse_pollhandle_destroy() when ph is no longer needed.
-static int haiga_poll(const char* path, struct fuse_file_info* fi, struct fuse_pollhandle* ph, unsigned* reventsp)
-{
-    return 0;
-}
+//static int haiga_poll(const char* path, struct fuse_file_info* fi, struct fuse_pollhandle* ph, unsigned* reventsp)
+//{
+//    return 0;
+//}
 
 /** Read the target of a symbolic link
  *

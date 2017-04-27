@@ -18,11 +18,6 @@
 #include "fuse_operations.h"
 #include "Constants.h"
 
-static const char *haiga_str = "Hello World!\n";
-static const char *haiga_path = "/hello";
-static char fileNamesArr[FILE_COUNT][MAX_FILE_SIZE];
-static int logFd;
-
 
 static int haiga_getattr(const char *path, struct stat *stbuf)
 {
@@ -35,18 +30,18 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_nlink = 2;
         return res;
 	}
-    else if (strcmp(path, haiga_path) == 0) {
-        stbuf->st_mode = S_IFREG | 0746;
-        stbuf->st_nlink = 1;
-        stbuf->st_size = strlen(haiga_str);
-        return res;
-    }
+//    else if (strcmp(path, haiga_path) == 0) {
+//        stbuf->st_mode = S_IFREG | 0666;
+//        stbuf->st_nlink = 1;
+//        stbuf->st_size = strlen(haiga_str);
+//        return res;
+//    }
     else {
-        for (int i=0; i<FILE_COUNT+3 ; i++) {
+        for (int i=0; i<FILE_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
-                stbuf->st_mode = S_IFREG | 0636;
+                stbuf->st_mode = S_IFREG | 0666;
                 stbuf->st_nlink = 1;
-                stbuf->st_size = strlen(haiga_str);
+                stbuf->st_size = strlen(fileDataArr[i]);
                 return res;
             }
         }
@@ -70,7 +65,7 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-	filler(buf, haiga_path + 1, NULL, 0);
+//	filler(buf, haiga_path + 1, NULL, 0);
     for(int i=0 ; i<FILE_COUNT ; i++) {
         filler(buf, fileNamesArr[i] + 1, NULL, 0);
     }
@@ -81,8 +76,18 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 static int haiga_open(const char *path, struct fuse_file_info *fi)
 {
     printf("OPEN FUNCTION \n");
-	if (strcmp(path, haiga_path) != 0)
-		return -ENOENT;
+    int isFileFound = 0;
+//    if (strcmp(path, haiga_path) != 0) {
+        for (int i=0; i<FILE_COUNT ; i++) {
+            if (strcmp(path, fileNamesArr[i]) == 0) {
+                isFileFound = 1;
+            }
+        }
+        if (isFileFound == 0) {
+            return -ENOENT;
+        }
+//    }
+    fi->flags = O_RDWR;
 
 //	if ((fi->flags & 3) != O_RDONLY)
 //		return -EACCES;
@@ -97,14 +102,25 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     printf("READ FUNCTION \n");
 	size_t len;
 	(void) fi;
-//	if(strcmp(path, haiga_path) != 0)
-//		return -ENOENT;
+    int fileNumber = -1;
+    int isFileFound = 0;
+//    if (strcmp(path, haiga_path) != 0) {
+        for (int i=0; i<FILE_COUNT ; i++) {
+            if (strcmp(path, fileNamesArr[i]) == 0) {
+                isFileFound = 1;
+                fileNumber = i;
+            }
+        }
+        if (isFileFound == 0) {
+            return -ENOENT;
+        }
+//    }
 
-	len = strlen(haiga_str);
+	len = strlen(fileDataArr[fileNumber]);
 	if (offset < len) {
 		if (offset + size > len)
 			size = len - offset;
-		memcpy(buf, haiga_str + offset, size);
+		memcpy(buf, fileDataArr[fileNumber] + offset, size);
 	} else
 		size = 0;
 
@@ -171,6 +187,8 @@ int main(int argc, char *argv[])
         fseek(file, i*1024, SEEK_SET);
         const char buff[] = "This is some text\n";
         fwrite((void*)buff, sizeof(char), sizeof(buff), file);
+        
+        sprintf(fileDataArr[i], "This is plain text on block number : %d %d %d %d %d %d %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
     }
     fclose(file);
 
