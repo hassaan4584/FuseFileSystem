@@ -19,7 +19,6 @@ const char* LOG_FILE_PATH   = "/Users/Hassaan/Desktop/haiga_lfs.txt";
 //static const char *haiga_path = "/hello";
 static char fileNamesArr[BLOCK_COUNT][BLOCK_SIZE];
 //static char fileDataArr[BLOCK_COUNT][BLOCK_SIZE+1];
-static int logFd;
 static FILE* filehd;
 
 

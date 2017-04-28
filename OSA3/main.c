@@ -70,7 +70,6 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-//	filler(buf, haiga_path + 1, NULL, 0);
     for(int i=0 ; i<BLOCK_COUNT ; i++) {
         filler(buf, fileNamesArr[i] + 1, NULL, 0);
     }
@@ -82,16 +81,14 @@ static int haiga_open(const char *path, struct fuse_file_info *fi)
 {
     printf("OPEN FUNCTION \n");
     int isFileFound = 0;
-//    if (strcmp(path, haiga_path) != 0) {
-        for (int i=0; i<BLOCK_COUNT ; i++) {
-            if (strcmp(path, fileNamesArr[i]) == 0) {
-                isFileFound = 1;
-            }
+    for (int i=0; i<BLOCK_COUNT ; i++) {
+        if (strcmp(path, fileNamesArr[i]) == 0) {
+            isFileFound = 1;
         }
-        if (isFileFound == 0) {
-            return -ENOENT;
-        }
-//    }
+    }
+    if (isFileFound == 0) {
+        return -ENOENT;
+    }
     fi->flags = O_RDWR;
 
 //	if ((fi->flags & 3) != O_RDONLY)
@@ -109,21 +106,16 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
 	(void) fi;
     int fileNumber = -1;
     int isFileFound = 0;
-//    if (strcmp(path, haiga_path) != 0) {
-        for (int i=0; i<BLOCK_COUNT ; i++) {
-            if (strcmp(path, fileNamesArr[i]) == 0) {
-                isFileFound = 1;
-                fileNumber = i;
-            }
+    for (int i=0; i<BLOCK_COUNT ; i++) {
+        if (strcmp(path, fileNamesArr[i]) == 0) {
+            isFileFound = 1;
+            fileNumber = i;
         }
-        if (isFileFound == 0) {
-            return -ENOENT;
-        }
-//    }
+    }
+    if (isFileFound == 0) {
+        return -ENOENT;
+    }
     
-//    char *num = "1024";
-    int number = atoi(path+1); // atoi = ASCII TO Int
-
     fseek(filehd, fileNumber*1024, SEEK_SET);
 
 //	len = strlen(fileDataArr[fileNumber]);
@@ -164,7 +156,6 @@ static struct fuse_operations haiga_operations = {
     .setxattr   = haiga_setxattr,
     .getxattr   = haiga_getxattr,
     .listxattr  = haiga_listxattr,
-//    .ioctl      = haiga_ioctl,
     .create     = haiga_create,
     .readlink   = haiga_readlink,
     .mkdir      = haiga_mkdir,
@@ -186,29 +177,21 @@ int main(int argc, char *argv[])
         sprintf(fileNamesArr[i], "/%d", i);
     }
     
-//    logFd = open(LOG_FILE_PATH, O_RDWR);
     filehd = fopen(LOG_FILE_PATH, "w+");
     if (filehd == NULL) {
         printf("LOG FILE COULD FAILED TO OPEN");
-
     }
     
-    if (logFd < 0) {
-        printf("LOG FILE COULD FAILED TO OPEN");
-    }
     char buff[BLOCK_SIZE];
     for (int i=0 ; i<BLOCK_COUNT ; i++) {
         fseek(filehd, i*1024, SEEK_SET);
         sprintf(buff, "This is plain text on block number :"
         "%d %d %d %d %d %d %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
+
         fwrite((void*)buff, sizeof(buff), 1, filehd);
-        
-//        sprintf(fileDataArr[i], "This is plain text on block number :"
-//                "%d %d %d %d %d %d    %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
     }
 
     int retVal = fuse_main(argc, argv, &haiga_operations, NULL);
-//    close(logFd);
     fclose(filehd);
     return retVal;
 }

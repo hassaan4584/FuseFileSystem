@@ -37,6 +37,18 @@ static int haiga_fgetattr(const char* path, struct stat* stbuf, struct fuse_file
 }
 
 //This is the same as the access(2) system call. It returns -ENOENT if the path doesn't exist, -EACCESS if the requested permission isn't available, or 0 for success. Note that it can be called on files, directories, or any other object that appears in the filesystem. This call is not required but is highly recommended.
+/**
+ * Check file access permissions
+ *
+ * This will be called for the access() system call.  If the
+ * 'default_permissions' mount option is given, this method is not
+ * called.
+ *
+ * This method is not called under Linux kernel versions 2.4.x
+ *
+ * Introduced in version 2.5
+ */
+
 static int haiga_access(const char* path, int mask)
 {
     printf("ACCESS FUNCTION \n");
@@ -71,23 +83,20 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     
     int fileNumber = -1;
     int isFileFound = 0;
-//    if (strcmp(path, haiga_path) != 0) {
-        for (int i=0; i<BLOCK_COUNT ; i++) {
-            if (strcmp(path, fileNamesArr[i]) == 0) {
-                isFileFound = 1;
-                fileNumber = i;
-            }
+    for (int i=0; i<BLOCK_COUNT ; i++) {
+        if (strcmp(path, fileNamesArr[i]) == 0) {
+            isFileFound = 1;
+            fileNumber = i;
         }
-        if (isFileFound == 0) {
-            return -ENOENT;
-        }
-//    }
+    }
+    if (isFileFound == 0) {
+        return -ENOENT;
+    }
 //    if (fi->flags == O_RDONLY)
 //        return -EACCES;
 
     fseek(filehd, fileNumber*1024, SEEK_SET);
 
-//    size_t len = strlen(fileDataArr[fileNumber]);
     size_t len = 1024;
     if (offset < len) {
         if (offset + size > len)
@@ -196,13 +205,25 @@ static int haiga_ioctl(const char* path, int cmd, void* arg, struct fuse_file_in
     return 0;
 }
 
+/**
+ * Create and open a file
+ *
+ * If the file does not exist, first create it with the specified
+ * mode, and then open it.
+ *
+ * If this method is not implemented or under Linux kernel
+ * versions earlier than 2.6.15, the mknod() and open() methods
+ * will be called instead.
+ *
+ * Introduced in version 2.5
+ */
+
 static int haiga_create(const char *path, mode_t mod, struct fuse_file_info *fi)
 {
     printf("CREATE FUNCTION \n");
     
-    if ((fi->flags & 3) != O_RDONLY)
+    if ((fi->flags) == O_RDONLY)
         return -EACCES;
-    
     
     return 0;
 }
