@@ -76,6 +76,8 @@ static int haiga_mknod(const char* path, mode_t mode, dev_t rdev)
 // If path is a symbolic link, fill buf with its target, up to size. See readlink(2) for how to handle a too-small buffer and for error codes. Not required if you don't support symbolic links. NOTE: Symbolic-link support requires only readlink and symlink. FUSE itself will take care of tracking symbolic links in paths, so your path-evaluation code doesn't need to worry about it.
 
 
+
+// Read size bytes from the given file into the buffer buf, beginning offset bytes into the file. See read(2) for full details. Returns the number of bytes transferred, or 0 if offset was at or beyond the end of the file. Required for any sensible filesystem.
 // As for read above, except that it can't return 0.
 static int haiga_write(const char* path, const char *buf, size_t size, off_t offset, struct fuse_file_info* fi)
 {
@@ -83,7 +85,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     
     int fileNumber = -1;
     int isFileFound = 0;
-    for (int i=0; i<BLOCK_COUNT ; i++) {
+    for (int i=0; i<INODE_COUNT ; i++) {
         if (strcmp(path, fileNamesArr[i]) == 0) {
             isFileFound = 1;
             fileNumber = i;
@@ -95,9 +97,29 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
 //    if (fi->flags == O_RDONLY)
 //        return -EACCES;
 
-    fseek(filehd, fileNumber*1024, SEEK_SET);
+    fseek(filehd, fileNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+    // First 4 bytes of this inode will represent size of the file
+    
+    int *fileSize = malloc(sizeof(int));
+    fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
 
-    size_t len = 1024;
+    
+    // e.g if the original file size is 2024B then 1024B will be in the first block and remaining 1000B will be in the 2nd/last block
+    int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
+    int *blockNumber = malloc(sizeof(int));
+    for (int i=0 ; i<numberOfBlocks; i++) {
+        fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
+    }
+    fread(blockNumber, sizeof(int), 1, filehd); // get the block number that has the remainig 1000 bytes
+    int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
+    
+    int location = (INODE_SIZE*INODE_COUNT) + lastBlockDataSize*BLOCK_SIZE; // getting to the actual block of data that contains these 1000 bytes
+    fseek(filehd, location, SEEK_SET);
+
+#warning Consider below scenario
+    // When 1000 bytes of this block are already in use. We have only 24 bytes available in this block. After filling up those 24 bytes we will find the next free block and write to that free block.
+    
+    size_t len = 1024; // the below logic should be updated a little
     if (offset < len) {
         if (offset + size > len)
             size = len - offset;

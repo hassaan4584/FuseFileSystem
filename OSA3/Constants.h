@@ -10,15 +10,26 @@
 #define Constants_h
 
 const int BLOCK_SIZE        = 1024;
-const int BLOCK_COUNT       = 20;
+const int BLOCK_COUNT       = 2;
+const int INODE_SIZE        = 40;
+const int INODE_COUNT       = 1024;
+
+/**
+ * The number of blocks of data used after INODE_SIZE*INODE_COUNT bytes of data.
+ * e.g The number of blocks after the initail 40KB of reserved data.
+ */
+static int blocksUsed   = 0;
+
+/**
+ *
+ * Number of the last iNode that we updated.
+ *
+ */
+static int lastInodeWritten = 1;
 
 const char* LOG_FILE_PATH   = "/Users/Hassaan/Desktop/haiga_lfs.txt";
 
-
-//static const char *haiga_str = "Hello World!\n";
-//static const char *haiga_path = "/hello";
-static char fileNamesArr[BLOCK_COUNT][BLOCK_SIZE];
-//static char fileDataArr[BLOCK_COUNT][BLOCK_SIZE+1];
+static char fileNamesArr[INODE_COUNT][BLOCK_SIZE];
 static FILE* filehd;
 
 

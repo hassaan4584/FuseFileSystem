@@ -35,11 +35,12 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
         return res;
 	}
     else {
-        for (int i=0; i<BLOCK_COUNT ; i++) {
+        for (int i=0; i<INODE_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 stbuf->st_mode = S_IFREG | 0666;
                 stbuf->st_nlink = 1;
-                stbuf->st_size = 1024;
+#warning fix st_size and make it generic
+                stbuf->st_size = 0;
                 gettimeofday(&tv, NULL);
                 ts.tv_sec = tv.tv_sec;
                 ts.tv_nsec = 0;
@@ -70,7 +71,7 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-    for(int i=0 ; i<BLOCK_COUNT ; i++) {
+    for(int i=0 ; i<INODE_COUNT ; i++) {
         filler(buf, fileNamesArr[i] + 1, NULL, 0);
     }
 	return 0;
@@ -81,7 +82,7 @@ static int haiga_open(const char *path, struct fuse_file_info *fi)
 {
     printf("OPEN FUNCTION \n");
     int isFileFound = 0;
-    for (int i=0; i<BLOCK_COUNT ; i++) {
+    for (int i=0; i<INODE_COUNT ; i++) {
         if (strcmp(path, fileNamesArr[i]) == 0) {
             isFileFound = 1;
         }
@@ -104,22 +105,36 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     printf("READ FUNCTION \n");
 	size_t len;
 	(void) fi;
-    int fileNumber = -1;
+    int inodeNumber = -1;
     int isFileFound = 0;
-    for (int i=0; i<BLOCK_COUNT ; i++) {
+    for (int i=0; i<INODE_COUNT ; i++) {
         if (strcmp(path, fileNamesArr[i]) == 0) {
             isFileFound = 1;
-            fileNumber = i;
+            inodeNumber = i;
         }
     }
     if (isFileFound == 0) {
         return -ENOENT;
     }
     
-    fseek(filehd, fileNumber*1024, SEEK_SET);
+    fseek(filehd, inodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+    // First 4 bytes of this inode will represent size of the file
 
-//	len = strlen(fileDataArr[fileNumber]);
-    len = 1024;
+    int *fileSize = malloc(sizeof(int));
+    fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
+
+#warning Assuming the file can be of 1KB only
+//    int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
+//    for (int i=0 ; i<numberOfBlocks; i++) {
+//        fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
+//    }
+    int *blockNumber = malloc(sizeof(int)); // Assuming for now, iNode can point to one block of data only
+    fread(blockNumber, sizeof(int), 1, filehd); // get the block number
+
+    int location = (INODE_SIZE*INODE_COUNT) + (*blockNumber)*BLOCK_SIZE;
+    fseek(filehd, location, SEEK_SET);
+
+    len = *fileSize; // Assuming for now, this filesize is less than 1KB
 	if (offset < len) {
 		if (offset + size > len)
 			size = len - offset;
@@ -137,12 +152,12 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
 static struct fuse_operations haiga_operations = {
 	.getattr	= haiga_getattr,
 	.readdir	= haiga_readdir,
+    .read		= haiga_read,
 	.open		= haiga_open,
-	.read		= haiga_read,
     .destroy    = haiga_destroy,
     .init       = haiga_init,
     .fgetattr   = haiga_fgetattr,
-    .access     = haiga_access,
+//    .access     = haiga_access,
     .mknod      = haiga_mknod,
     .write      = haiga_write,
     .statfs     = haiga_statfs,
@@ -173,7 +188,7 @@ static struct fuse_operations haiga_operations = {
 
 int main(int argc, char *argv[])
 {
-    for(int i=0 ; i<BLOCK_COUNT ; i++) {
+    for(int i=0 ; i<INODE_COUNT ; i++) {
         sprintf(fileNamesArr[i], "/%d", i);
     }
     
@@ -182,15 +197,33 @@ int main(int argc, char *argv[])
         printf("LOG FILE COULD FAILED TO OPEN");
     }
     
-    char buff[BLOCK_SIZE];
-    for (int i=0 ; i<BLOCK_COUNT ; i++) {
-        fseek(filehd, i*1024, SEEK_SET);
-        sprintf(buff, "This is plain text on block number :"
-        "%d %d %d %d %d %d %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
-
-        fwrite((void*)buff, sizeof(buff), 1, filehd);
+    for (int i=0 ; i<INODE_COUNT ; i++) {
+        
+        fseek(filehd, i*INODE_SIZE, SEEK_SET);
+        int *fileSize = (int*) malloc(sizeof(int));
+        *fileSize = 0;
+        fwrite((void*)fileSize, sizeof(int), 1, filehd); // writing size of the file in the 1st 4 bytes of the inode
+        
+        int blockNumber = -1;
+        for(int j=0 ; j<8 ; j++) {
+            fwrite((void*)&blockNumber, sizeof(int), 1, filehd); // initializing next 32 bytes with eigh 4 byte block numbers
+        }
+        
+        fseek(filehd, 4, SEEK_CUR); // Leaving the last 4 bytes of the inode empty
     }
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     int retVal = fuse_main(argc, argv, &haiga_operations, NULL);
     fclose(filehd);
     return retVal;
