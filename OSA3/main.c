@@ -37,7 +37,7 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
 //        return res;
 //    }
     else {
-        for (int i=0; i<FILE_COUNT ; i++) {
+        for (int i=0; i<BLOCK_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 stbuf->st_mode = S_IFREG | 0666;
                 stbuf->st_nlink = 1;
@@ -66,7 +66,7 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 //	filler(buf, haiga_path + 1, NULL, 0);
-    for(int i=0 ; i<FILE_COUNT ; i++) {
+    for(int i=0 ; i<BLOCK_COUNT ; i++) {
         filler(buf, fileNamesArr[i] + 1, NULL, 0);
     }
 	return 0;
@@ -78,7 +78,7 @@ static int haiga_open(const char *path, struct fuse_file_info *fi)
     printf("OPEN FUNCTION \n");
     int isFileFound = 0;
 //    if (strcmp(path, haiga_path) != 0) {
-        for (int i=0; i<FILE_COUNT ; i++) {
+        for (int i=0; i<BLOCK_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 isFileFound = 1;
             }
@@ -105,7 +105,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     int fileNumber = -1;
     int isFileFound = 0;
 //    if (strcmp(path, haiga_path) != 0) {
-        for (int i=0; i<FILE_COUNT ; i++) {
+        for (int i=0; i<BLOCK_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 isFileFound = 1;
                 fileNumber = i;
@@ -169,7 +169,7 @@ static struct fuse_operations haiga_operations = {
 
 int main(int argc, char *argv[])
 {
-    for(int i=0 ; i<FILE_COUNT ; i++) {
+    for(int i=0 ; i<BLOCK_COUNT ; i++) {
         sprintf(fileNamesArr[i], "/%d", i);
     }
     
@@ -183,12 +183,13 @@ int main(int argc, char *argv[])
     if (logFd < 0) {
         printf("LOG FILE COULD FAILED TO OPEN");
     }
-    for (int i=0 ; i<FILE_COUNT ; i++) {
+    for (int i=0 ; i<BLOCK_COUNT ; i++) {
         fseek(file, i*1024, SEEK_SET);
         const char buff[] = "This is some text\n";
         fwrite((void*)buff, sizeof(char), sizeof(buff), file);
         
-        sprintf(fileDataArr[i], "This is plain text on block number : %d %d %d %d %d %d %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
+        sprintf(fileDataArr[i], "This is plain text on block number :"
+                "%d %d %d %d %d %d %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
     }
     fclose(file);
 
