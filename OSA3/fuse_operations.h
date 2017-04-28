@@ -72,7 +72,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     int fileNumber = -1;
     int isFileFound = 0;
 //    if (strcmp(path, haiga_path) != 0) {
-        for (int i=0; i<FILE_COUNT ; i++) {
+        for (int i=0; i<BLOCK_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 isFileFound = 1;
                 fileNumber = i;
@@ -85,12 +85,15 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
 //    if (fi->flags == O_RDONLY)
 //        return -EACCES;
 
-    
-    size_t len = strlen(fileDataArr[fileNumber]);
+    fseek(filehd, fileNumber*1024, SEEK_SET);
+
+//    size_t len = strlen(fileDataArr[fileNumber]);
+    size_t len = 1024;
     if (offset < len) {
         if (offset + size > len)
             size = len - offset;
-        memcpy(fileDataArr[fileNumber] + offset, buf, size);
+        fseek(filehd, offset, SEEK_CUR);
+        fwrite((void*)buf, sizeof(buf), 1, filehd);
     } else
         size = 0;
     

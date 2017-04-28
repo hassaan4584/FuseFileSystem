@@ -17,31 +17,36 @@
 #include <fcntl.h>
 #include "fuse_operations.h"
 #include "Constants.h"
-
+#include <time.h>
 
 static int haiga_getattr(const char *path, struct stat *stbuf)
 {
     printf("Get Attr FUNCTION Moun\n");
 	int res = 0;
 
+    struct timeval tv;
+    struct timespec ts;
+
+    // reset memory for the stat structure
 	memset(stbuf, 0, sizeof(struct stat));
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
         return res;
 	}
-//    else if (strcmp(path, haiga_path) == 0) {
-//        stbuf->st_mode = S_IFREG | 0666;
-//        stbuf->st_nlink = 1;
-//        stbuf->st_size = strlen(haiga_str);
-//        return res;
-//    }
     else {
         for (int i=0; i<BLOCK_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 stbuf->st_mode = S_IFREG | 0666;
                 stbuf->st_nlink = 1;
-                stbuf->st_size = strlen(fileDataArr[i]);
+                stbuf->st_size = 1024;
+                gettimeofday(&tv, NULL);
+                ts.tv_sec = tv.tv_sec;
+                ts.tv_nsec = 0;
+                stbuf->st_ctimespec = ts;
+//                stbuf->st_birthtimespec = ts;
+//                stbuf->st_atimespec = ts;
+                stbuf->st_mtimespec = ts;
                 return res;
             }
         }
@@ -115,12 +120,20 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
             return -ENOENT;
         }
 //    }
+    
+//    char *num = "1024";
+    int number = atoi(path+1); // atoi = ASCII TO Int
 
-	len = strlen(fileDataArr[fileNumber]);
+    fseek(filehd, fileNumber*1024, SEEK_SET);
+
+//	len = strlen(fileDataArr[fileNumber]);
+    len = 1024;
 	if (offset < len) {
 		if (offset + size > len)
 			size = len - offset;
-		memcpy(buf, fileDataArr[fileNumber] + offset, size);
+        fseek(filehd, offset, SEEK_CUR);
+        fread(buf, size, 1, filehd);
+//		memcpy(buf, fileDataArr[fileNumber] + offset, size);
 	} else
 		size = 0;
 
@@ -174,8 +187,8 @@ int main(int argc, char *argv[])
     }
     
 //    logFd = open(LOG_FILE_PATH, O_RDWR);
-    FILE *file = fopen(LOG_FILE_PATH, "w+");
-    if (file == NULL) {
+    filehd = fopen(LOG_FILE_PATH, "w+");
+    if (filehd == NULL) {
         printf("LOG FILE COULD FAILED TO OPEN");
 
     }
@@ -183,17 +196,19 @@ int main(int argc, char *argv[])
     if (logFd < 0) {
         printf("LOG FILE COULD FAILED TO OPEN");
     }
+    char buff[BLOCK_SIZE];
     for (int i=0 ; i<BLOCK_COUNT ; i++) {
-        fseek(file, i*1024, SEEK_SET);
-        const char buff[] = "This is some text\n";
-        fwrite((void*)buff, sizeof(char), sizeof(buff), file);
+        fseek(filehd, i*1024, SEEK_SET);
+        sprintf(buff, "This is plain text on block number :"
+        "%d %d %d %d %d %d %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
+        fwrite((void*)buff, sizeof(buff), 1, filehd);
         
-        sprintf(fileDataArr[i], "This is plain text on block number :"
-                "%d %d %d %d %d %d %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
+//        sprintf(fileDataArr[i], "This is plain text on block number :"
+//                "%d %d %d %d %d %d    %d %d %d %d\n", i, i, i, i, i, i ,i, i, i, i);
     }
-    fclose(file);
 
     int retVal = fuse_main(argc, argv, &haiga_operations, NULL);
 //    close(logFd);
+    fclose(filehd);
     return retVal;
 }
