@@ -170,11 +170,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "294"
-            endingLineNumber = "294"
+            startingLineNumber = "340"
+            endingLineNumber = "340"
             landmarkName = "haiga_utimens(const char *path, const struct timespec tv[2])"
             landmarkType = "7">
          </BreakpointContent>
@@ -182,15 +182,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "281"
-            endingLineNumber = "281"
+            startingLineNumber = "327"
+            endingLineNumber = "327"
             landmarkName = "haiga_truncate(const char *path, off_t offset)"
             landmarkType = "7">
          </BreakpointContent>
@@ -202,11 +202,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "273"
-            endingLineNumber = "273"
+            startingLineNumber = "319"
+            endingLineNumber = "319"
             landmarkName = "haiga_chown(const char *path, uid_t uid, gid_t gid)"
             landmarkType = "7">
          </BreakpointContent>
@@ -218,11 +218,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "265"
-            endingLineNumber = "265"
+            startingLineNumber = "311"
+            endingLineNumber = "311"
             landmarkName = "haiga_chmod(const char *path, mode_t mode)"
             landmarkType = "7">
          </BreakpointContent>
@@ -234,11 +234,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "257"
-            endingLineNumber = "257"
+            startingLineNumber = "303"
+            endingLineNumber = "303"
             landmarkName = "haiga_link(const char *unknown1, const char *unknown2)"
             landmarkType = "7">
          </BreakpointContent>
@@ -250,11 +250,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "249"
-            endingLineNumber = "249"
+            startingLineNumber = "295"
+            endingLineNumber = "295"
             landmarkName = "haiga_rmdir(const char *path)"
             landmarkType = "7">
          </BreakpointContent>
@@ -266,11 +266,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "233"
-            endingLineNumber = "233"
+            startingLineNumber = "279"
+            endingLineNumber = "279"
             landmarkName = "haiga_mkdir(const char * path, mode_t mode)"
             landmarkType = "7">
          </BreakpointContent>
@@ -282,11 +282,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "224"
-            endingLineNumber = "224"
+            startingLineNumber = "270"
+            endingLineNumber = "270"
             landmarkName = "haiga_readlink(const char *path, char *buf, size_t size)"
             landmarkType = "7">
          </BreakpointContent>
@@ -297,60 +297,12 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "OSA3/main.c"
-            timestampString = "514985609.855084"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "64"
-            endingLineNumber = "64"
-            landmarkName = "haiga_readdir()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "OSA3/main.c"
-            timestampString = "514985609.855084"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "50"
-            endingLineNumber = "50"
-            landmarkName = "haiga_getattr()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "OSA3/main.c"
-            timestampString = "514985609.855084"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "41"
-            endingLineNumber = "41"
-            landmarkName = "haiga_getattr()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "314"
-            endingLineNumber = "314"
+            startingLineNumber = "360"
+            endingLineNumber = "360"
             landmarkName = "haiga_rename(const char *x, const char *y)"
             landmarkType = "7">
          </BreakpointContent>
@@ -362,11 +314,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985609.855084"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "306"
-            endingLineNumber = "306"
+            startingLineNumber = "352"
+            endingLineNumber = "352"
             landmarkName = "haiga_symlink(const char *x, const char *y)"
             landmarkType = "7">
          </BreakpointContent>
@@ -406,16 +358,48 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "OSA3/fuse_operations.h"
-            timestampString = "514985699.880129"
+            timestampString = "515103471.658199"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "86"
-            endingLineNumber = "86"
+            startingLineNumber = "131"
+            endingLineNumber = "131"
             landmarkName = "haiga_write(const char* path, const char *buf, size_t size, off_t offset, struct fuse_file_info* fi)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "OSA3/fuse_operations.h"
+            timestampString = "515103471.658199"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "109"
+            endingLineNumber = "109"
+            landmarkName = "haiga_write(const char* path, const char *buf, size_t size, off_t offset, struct fuse_file_info* fi)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "OSA3/main.c"
+            timestampString = "515105193.307041"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "105"
+            endingLineNumber = "105"
+            landmarkName = "haiga_read()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
