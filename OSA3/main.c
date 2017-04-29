@@ -19,6 +19,34 @@
 #include "Constants.h"
 #include <time.h>
 
+int getSizeOfFile(int fileNumber) {
+    fseek(filehd, fileNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+    // First 4 bytes of this inode will represent size of the file
+    
+    int *fileSize = malloc(sizeof(int));
+    fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
+    return *fileSize;
+}
+
+void initializeLogFile() {
+
+    for (int i=0 ; i<INODE_COUNT ; i++) {
+        
+        fseek(filehd, i*INODE_SIZE, SEEK_SET);
+        int *fileSize = (int*) malloc(sizeof(int));
+        *fileSize = 0 ;
+        fwrite((void*)fileSize, sizeof(int), 1, filehd); // writing size of the file in the 1st 4 bytes of the inode
+        
+        int blockNumber = -1;
+        for(int j=0 ; j<8 ; j++) {
+            fwrite((void*)&blockNumber, sizeof(int), 1, filehd); // initializing next 32 bytes with eigh 4 byte block numbers
+        }
+        
+        fseek(filehd, 4, SEEK_CUR); // Leaving the last 4 bytes of the inode empty
+    }
+
+}
+
 static int haiga_getattr(const char *path, struct stat *stbuf)
 {
     printf("Get Attr FUNCTION Moun\n");
@@ -40,7 +68,7 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
                 stbuf->st_mode = S_IFREG | 0666;
                 stbuf->st_nlink = 1;
 #warning fix st_size and make it generic
-                stbuf->st_size = 0;
+                stbuf->st_size = getSizeOfFile(i);
                 gettimeofday(&tv, NULL);
                 ts.tv_sec = tv.tv_sec;
                 ts.tv_nsec = 0;
@@ -48,6 +76,7 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
 //                stbuf->st_birthtimespec = ts;
 //                stbuf->st_atimespec = ts;
                 stbuf->st_mtimespec = ts;
+
                 return res;
             }
         }
@@ -192,25 +221,13 @@ int main(int argc, char *argv[])
         sprintf(fileNamesArr[i], "/%d", i);
     }
     
-    filehd = fopen(LOG_FILE_PATH, "w+");
+    filehd = fopen(LOG_FILE_PATH, "r+");
     if (filehd == NULL) {
         printf("LOG FILE COULD FAILED TO OPEN");
+        filehd = fopen(LOG_FILE_PATH, "w+");
+        initializeLogFile();
     }
     
-    for (int i=0 ; i<INODE_COUNT ; i++) {
-        
-        fseek(filehd, i*INODE_SIZE, SEEK_SET);
-        int *fileSize = (int*) malloc(sizeof(int));
-        *fileSize = 0;
-        fwrite((void*)fileSize, sizeof(int), 1, filehd); // writing size of the file in the 1st 4 bytes of the inode
-        
-        int blockNumber = -1;
-        for(int j=0 ; j<8 ; j++) {
-            fwrite((void*)&blockNumber, sizeof(int), 1, filehd); // initializing next 32 bytes with eigh 4 byte block numbers
-        }
-        
-        fseek(filehd, 4, SEEK_CUR); // Leaving the last 4 bytes of the inode empty
-    }
 
     
     

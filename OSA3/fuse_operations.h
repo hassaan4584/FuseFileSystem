@@ -97,11 +97,17 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
 //    if (fi->flags == O_RDONLY)
 //        return -EACCES;
 
+    if (strlen(buf) > (8*1024)) {
+        return -EFBIG;
+    }
     fseek(filehd, fileNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
     
     int *fileSize = malloc(sizeof(int));
     fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
+    if (*fileSize == 0) {
+        *fileSize = (int)strlen(buf);
+    }
 
     
     // e.g if the original file size is 2024B then 1024B will be in the first block and remaining 1000B will be in the 2nd/last block
@@ -115,9 +121,9 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
         // This inode has not yet been assigned any block. We will assign it the next free block.
         fseek(filehd, -sizeof(int), SEEK_CUR); // moving back the file pointer so that we can assign this inode a new block to write its data to.
         int *nextFreeBlockNumber = malloc(sizeof(int));
-        blocksUsed++;
         *nextFreeBlockNumber = blocksUsed;
         *blockNumber = blocksUsed;
+        blocksUsed++;
         fwrite((void*)nextFreeBlockNumber, sizeof(int), 1, filehd);
         
     }
@@ -129,19 +135,21 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
 #warning Consider below scenario
     // When 1000 bytes of this block are already in use. We have only 24 bytes available in this block. After filling up those 24 bytes we will find the next free block and write to that free block.
     
-    size_t len = lastBlockDataSize;
-    if (offset < len) {  // the below logic should be updated a little
-        if (offset + size > len)
-            size = len - offset;
-        fseek(filehd, offset, SEEK_CUR);
-        fwrite((void*)buf, sizeof(buf), 1, filehd);
-    } else
-        size = 0;
-    
-    return (int)size;
+//    size_t len = 1024;
+    if (offset < *fileSize) {  // the below logic should be updated a little
+//        if (offset + size > len)
+//            size = len - offset;
+        fseek(filehd, offset+lastBlockDataSize, SEEK_CUR);
+        fwrite((void*)buf, strlen(buf), 1, filehd);
+        int bytesWritten = (int)strlen(buf);
+        
+        fseek(filehd, fileNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+        fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
 
-    
-    return 1;
+    } else
+        return 0;
+
+    return (int)strlen(buf);
 }
 
 
