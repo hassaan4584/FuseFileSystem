@@ -111,16 +111,26 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
         fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
     }
     fread(blockNumber, sizeof(int), 1, filehd); // get the block number that has the remainig 1000 bytes
+    if (*blockNumber == -1) {
+        // This inode has not yet been assigned any block. We will assign it the next free block.
+        fseek(filehd, -sizeof(int), SEEK_CUR); // moving back the file pointer so that we can assign this inode a new block to write its data to.
+        int *nextFreeBlockNumber = malloc(sizeof(int));
+        blocksUsed++;
+        *nextFreeBlockNumber = blocksUsed;
+        *blockNumber = blocksUsed;
+        fwrite((void*)nextFreeBlockNumber, sizeof(int), 1, filehd);
+        
+    }
     int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
     
-    int location = (INODE_SIZE*INODE_COUNT) + lastBlockDataSize*BLOCK_SIZE; // getting to the actual block of data that contains these 1000 bytes
+    int location = (INODE_SIZE*INODE_COUNT) + ((*blockNumber)*BLOCK_SIZE) ; // getting to the actual block of data that contains these 1000 bytes
     fseek(filehd, location, SEEK_SET);
 
 #warning Consider below scenario
     // When 1000 bytes of this block are already in use. We have only 24 bytes available in this block. After filling up those 24 bytes we will find the next free block and write to that free block.
     
-    size_t len = 1024; // the below logic should be updated a little
-    if (offset < len) {
+    size_t len = lastBlockDataSize;
+    if (offset < len) {  // the below logic should be updated a little
         if (offset + size > len)
             size = len - offset;
         fseek(filehd, offset, SEEK_CUR);
