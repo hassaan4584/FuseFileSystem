@@ -13,10 +13,10 @@
 
 
 const int BLOCK_SIZE        = 1024;
-const int BLOCK_COUNT       = 100;
-//const int INODE_SIZE        = 40;
-//const int INODE_COUNT       = 1024;
-//const int DATA_BLOCKS_BASE_ADDR = (INODE_SIZE*INODE_COUNT);
+const int BLOCK_COUNT       = 2;
+const int INODE_SIZE        = 40;
+const int INODE_COUNT       = 1024;
+const int DATA_BLOCKS_BASE_ADDR = (INODE_SIZE*INODE_COUNT);
 
 /**
  * The number of blocks of data used after INODE_SIZE*INODE_COUNT bytes of data.
@@ -35,7 +35,7 @@ static int lastInodeWritten = 1;
 const char* LOG_FILE_PATH   = "/Users/Hassaan/Desktop/haiga_lfs.txt";
 const char* BLOCK_COUNT_FILE_PATH   = "/Users/Hassaan/Desktop/blockCount.txt";
 
-static char fileNamesArr[BLOCK_COUNT][BLOCK_SIZE];
+static char fileNamesArr[INODE_COUNT][BLOCK_SIZE];
 static FILE* filehd;
 
 
