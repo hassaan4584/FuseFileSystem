@@ -36,12 +36,11 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
         return res;
 	}
     else {
-        for (int i=0; i<INODE_COUNT ; i++) {
+        for (int i=0; i<BLOCK_COUNT ; i++) {
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 stbuf->st_mode = S_IFREG | 0666;
                 stbuf->st_nlink = 1;
-#warning fix st_size and make it generic
-                stbuf->st_size = getSizeOfFile(i);
+                stbuf->st_size = 1024;
                 gettimeofday(&tv, NULL);
                 ts.tv_sec = tv.tv_sec;
                 ts.tv_nsec = 0;
@@ -73,7 +72,7 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-    for(int i=0 ; i<INODE_COUNT ; i++) {
+    for(int i=0 ; i<BLOCK_COUNT ; i++) {
         filler(buf, fileNamesArr[i] + 1, NULL, 0);
     }
 	return 0;
@@ -84,7 +83,7 @@ static int haiga_open(const char *path, struct fuse_file_info *fi)
 {
     printf("OPEN FUNCTION \n");
     int isFileFound = 0;
-    for (int i=0; i<INODE_COUNT ; i++) {
+    for (int i=0; i<BLOCK_COUNT ; i++) {
         if (strcmp(path, fileNamesArr[i]) == 0) {
             isFileFound = 1;
         }
@@ -109,7 +108,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
 	(void) fi;
     int inodeNumber = -1;
     int isFileFound = 0;
-    for (int i=0; i<INODE_COUNT ; i++) {
+    for (int i=0; i<BLOCK_COUNT ; i++) {
         if (strcmp(path, fileNamesArr[i]) == 0) {
             isFileFound = 1;
             inodeNumber = i;
@@ -119,34 +118,13 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
         return -ENOENT;
     }
     
-    fseek(filehd, inodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
-    // First 4 bytes of this inode will represent size of the file
+    fseek(filehd, (inodeNumber*BLOCK_SIZE)+offset, SEEK_SET); // Go to the file number
 
-    int *fileSize = malloc(sizeof(int));
-    fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
+    int lengthToRead = ((int)size < 1024) ? (int)size : 1024;
+    fread(buf, lengthToRead, 1, filehd);
 
-#warning Assuming the file can be of 1KB only
-//    int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
-//    for (int i=0 ; i<numberOfBlocks; i++) {
-//        fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
-//    }
-    int *blockNumber = malloc(sizeof(int)); // Assuming for now, iNode can point to one block of data only
-    fread(blockNumber, sizeof(int), 1, filehd); // get the block number
-
-    int location = (INODE_SIZE*INODE_COUNT) + (*blockNumber)*BLOCK_SIZE;
-    fseek(filehd, location, SEEK_SET);
-
-    len = *fileSize; // Assuming for now, this filesize is less than 1KB
-	if (offset < len) {
-		if (offset + size > len)
-			size = len - offset;
-        fseek(filehd, offset, SEEK_CUR);
-        fread(buf, size, 1, filehd);
-//		memcpy(buf, fileDataArr[fileNumber] + offset, size);
-	} else
-		size = 0;
-
-	return (int)size;
+    int retVal = (lengthToRead<strlen(buf))? lengthToRead : (int)strlen(buf);
+    return retVal;
 }
 
 
@@ -190,10 +168,10 @@ static struct fuse_operations haiga_operations = {
 
 int main(int argc, char *argv[])
 {
-    for(int i=0 ; i<INODE_COUNT ; i++) {
+    for(int i=0 ; i<BLOCK_COUNT ; i++) {
         sprintf(fileNamesArr[i], "/%d", i);
     }
-    initializeUsedBlockCount(); // setting the global blocks used variable
+//    initializeUsedBlockCount(); // setting the global blocks used variable
     
     filehd = fopen(LOG_FILE_PATH, "r+");
     if (filehd == NULL) {
