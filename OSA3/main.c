@@ -118,35 +118,52 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     if (isFileFound == 0) {
         return -ENOENT;
     }
+    if ((int)size > (8*1024)) {
+        return -EFBIG;
+    }
+
     
     fseek(filehd, inodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
 
     int *fileSize = malloc(sizeof(int));
     fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
+    *fileSize = ((*fileSize) < (int)strlen(buf)) ? *fileSize : (int)strlen(buf);
 
-#warning Assuming the file can be of 1KB only
-//    int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
-//    for (int i=0 ; i<numberOfBlocks; i++) {
-//        fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
-//    }
-    int *blockNumber = malloc(sizeof(int)); // Assuming for now, iNode can point to one block of data only
-    fread(blockNumber, sizeof(int), 1, filehd); // get the block number
-
-    int location = (INODE_SIZE*INODE_COUNT) + (*blockNumber)*BLOCK_SIZE;
-    fseek(filehd, location, SEEK_SET);
-
-    len = *fileSize; // Assuming for now, this filesize is less than 1KB
-	if (offset < len) {
-		if (offset + size > len)
-			size = len - offset;
-        fseek(filehd, offset, SEEK_CUR);
-        fread(buf, size, 1, filehd);
-//		memcpy(buf, fileDataArr[fileNumber] + offset, size);
-	} else
-		size = 0;
-
-	return (int)size;
+    if (offset > *fileSize) {
+        return 0;
+    }
+    
+    // e.g if the original file size is 2024B then 1024B will be in the first block and remaining 1000B will be in the 2nd/last block
+    int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
+    int *blockNumber = malloc(sizeof(int));
+    for (int i=0 ; i<numberOfBlocks; i++) {
+        fseek(filehd, ((inodeNumber*INODE_SIZE)+4+(4*i)), SEEK_SET); // Read block number from our iNode
+        fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
+        if (*blockNumber == -1) { // previously this block pointed to no data
+            return 0; // There is no data in this block.
+        }
+        else {
+            int dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE);
+            fseek(filehd, dataBlockLocation, SEEK_SET); // Go to the ith data block of the iNode
+            // we will read complete BLOCK_SIZE bytes from this block because it is not the last data block of this file and hence it is completely filled
+            fread((void*)(buf+(i*BLOCK_SIZE)), BLOCK_SIZE, 1, filehd);
+        }
+    }
+    
+    fseek(filehd, ((inodeNumber*INODE_SIZE)+4+28), SEEK_SET); // Get to the last block number from our iNode
+    fread(blockNumber, sizeof(int), 1, filehd); // Read last block number from our iNode
+    if (*blockNumber == -1) {
+        return numberOfBlocks*BLOCK_SIZE; // return the number of bytes that we have written so far in buffer
+    }
+    
+    int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
+    int lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
+    fseek(filehd, lastBlockStartLocation, SEEK_SET);
+    fread((void*)(buf+(numberOfBlocks*BLOCK_SIZE)), lastBlockDataSize, 1, filehd);
+    int totalBytesRead = (numberOfBlocks*BLOCK_SIZE) + lastBlockDataSize;
+    
+    return totalBytesRead;
 }
 
 
