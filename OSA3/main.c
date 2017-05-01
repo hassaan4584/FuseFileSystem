@@ -40,7 +40,6 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
             if (strcmp(path, fileNamesArr[i]) == 0) {
                 stbuf->st_mode = S_IFREG | 0666;
                 stbuf->st_nlink = 1;
-#warning fix st_size and make it generic
                 stbuf->st_size = getSizeOfFile(i);
                 gettimeofday(&tv, NULL);
                 ts.tv_sec = tv.tv_sec;
