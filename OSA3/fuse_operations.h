@@ -66,6 +66,7 @@ static int haiga_access(const char* path, int mask)
 static int haiga_mknod(const char* path, mode_t mode, dev_t rdev)
 {
     printf("mknod FUNCTION \n");
+    mode = S_IFREG | 0666;
     return 0;
 }
 
@@ -94,12 +95,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     if (isFileFound == 0) {
         return -ENOENT;
     }
-//    if (fi->flags == O_RDONLY)
-//        return -EACCES;
 
-//    if (strlen(buf) > (8*1024)) {
-//        return -EFBIG;
-//    }
     if ((int)size > (8*1024)) {
         return -EFBIG;
     }
@@ -109,12 +105,6 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     int *fileSize = malloc(sizeof(int));
     fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
     *fileSize = ((*fileSize) < (int)strlen(buf)) ? *fileSize : (int)strlen(buf);
-//    if (*fileSize == 0) {
-//        *fileSize = (int)strlen(buf);
-//    }
-//    else {
-//        *fileSize = (int)size;
-//    }
     
     if (offset > *fileSize) {
         return 0;
@@ -166,43 +156,6 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     return bytesWritten;
     
 #warning free up the spaces allocated using malloc
-    
-    
-    // Testing 2.1 ripple effect in the below fread we will perform an fseek first
-//    fread(blockNumber, sizeof(int), 1, filehd); // get the block number that has the remainig 1000 bytes
-//    if (*blockNumber == -1) {
-//        // This inode has not yet been assigned any block. We will assign it the next free block.
-//        fseek(filehd, -sizeof(int), SEEK_CUR); // moving back the file pointer so that we can assign this inode a new block to write its data to.
-//        int *nextFreeBlockNumber = malloc(sizeof(int));
-//        *nextFreeBlockNumber = blocksUsed;
-//        *blockNumber = blocksUsed;
-//        blocksUsed++;
-//        fwrite((void*)nextFreeBlockNumber, sizeof(int), 1, filehd);
-//    }
-//    
-//    int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
-//    
-//    int location = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE) ; // getting to the actual block of data that contains these 1000 bytes
-//    fseek(filehd, location, SEEK_SET);
-
-//#warning Consider below scenario
-    // When 1000 bytes of this block are already in use. We have only 24 bytes available in this block. After filling up those 24 bytes we will find the next free block and write to that free block.
-    
-//    size_t len = 1024;
-//    if (offset < *fileSize) {  // the below logic should be updated a little
-////        if (offset + size > len)
-////            size = len - offset;
-//        fseek(filehd, offset+lastBlockDataSize, SEEK_CUR);
-//        fwrite((void*)buf, strlen(buf), 1, filehd);
-//        int bytesWritten = (int)strlen(buf);
-//        
-//        fseek(filehd, fileNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
-//        fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
-//
-//    } else
-//        return 0;
-
-//    return (int)strlen(buf);
 }
 
 
@@ -292,11 +245,11 @@ static int haiga_listxattr(const char* path, char* list, size_t size)
     return 0;
 }
 //       Support the ioctl(2) system call. As such, almost everything is up to the filesystem. On a 64-bit machine, FUSE_IOCTL_COMPAT will be set for 32-bit ioctls. The size and direction of data is determined by _IOC_*() decoding of cmd. For _IOC_NONE, data will be NULL; for _IOC_WRITE data is being written by the user; for _IOC_READ it is being read, and if both are set the data is bidirectional. In all non-NULL cases, the area is _IOC_SIZE(cmd) bytes in size.
-static int haiga_ioctl(const char* path, int cmd, void* arg, struct fuse_file_info* fi, unsigned int flags, void* data)
-{
-    printf("IOCTL FUNCTION \n");
-    return 0;
-}
+//static int haiga_ioctl(const char* path, int cmd, void* arg, struct fuse_file_info* fi, unsigned int flags, void* data)
+//{
+//    printf("IOCTL FUNCTION \n");
+//    return 0;
+//}
 
 /**
  * Create and open a file
@@ -315,9 +268,9 @@ static int haiga_create(const char *path, mode_t mod, struct fuse_file_info *fi)
 {
     printf("CREATE FUNCTION \n");
     
-    if ((fi->flags) == O_RDONLY)
-        return -EACCES;
-    
+//    fi->flags = O_RDWR;
+//    mod = S_IFREG | 0666;
+
     return 0;
 }
 

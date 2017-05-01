@@ -16,9 +16,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
+#include <stdlib.h>
 #include "fuse_operations.h"
 #include "Constants.h"
 #include "helpers.h"
+
+int gettimeofday(struct timeval *restrict tp, void *restrict tzp);
 
 static int haiga_getattr(const char *path, struct stat *stbuf)
 {
@@ -31,7 +34,7 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
     // reset memory for the stat structure
 	memset(stbuf, 0, sizeof(struct stat));
 	if (strcmp(path, "/") == 0) {
-		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_mode = S_IFDIR | 0777;
 		stbuf->st_nlink = 2;
         return res;
 	}
@@ -72,7 +75,7 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-    for(int i=0 ; i<INODE_COUNT ; i++) {
+    for(int i=0 ; i<INODE_COUNT-1020 ; i++) {
         filler(buf, fileNamesArr[i] + 1, NULL, 0);
     }
 	return 0;
@@ -104,7 +107,6 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
     printf("READ FUNCTION \n");
-	size_t len;
 	(void) fi;
     int inodeNumber = -1;
     int isFileFound = 0;
@@ -184,7 +186,7 @@ static struct fuse_operations haiga_operations = {
     .fsync      = haiga_fsync,
     .fsyncdir   = haiga_fsyncDir,
     .flush      = haiga_flush,
-    .lock       = haiga_lock,
+//    .lock       = haiga_lock,
     .bmap       = haiga_bmap,
     .setxattr   = haiga_setxattr,
     .getxattr   = haiga_getxattr,
@@ -217,6 +219,7 @@ int main(int argc, char *argv[])
         filehd = fopen(LOG_FILE_PATH, "w+");
         initializeLogFile();
     }
+    readAllFileNamesFromiNodeZero();
     
 
     

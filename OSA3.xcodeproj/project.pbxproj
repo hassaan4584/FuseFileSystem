@@ -38,6 +38,7 @@
 		0530C3461EA619FC00FCDBEA /* fuse_lowlevel_compat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fuse_lowlevel_compat.h; sourceTree = "<group>"; };
 		0530C3471EA619FC00FCDBEA /* fuse_opt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fuse_opt.h; sourceTree = "<group>"; };
 		0530C3481EA619FC00FCDBEA /* fuse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fuse.h; sourceTree = "<group>"; };
+		055B1CAA1EB7AFBE00E9C0C3 /* dataStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dataStructures.h; sourceTree = "<group>"; };
 		059D9F961EAF526B00CA3ED0 /* fuse_operations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fuse_operations.h; sourceTree = "<group>"; };
 		059D9F981EAF52E600CA3ED0 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		059D9F991EAF70FE00CA3ED0 /* helpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = helpers.h; sourceTree = "<group>"; };
@@ -112,6 +113,7 @@
 				059D9F961EAF526B00CA3ED0 /* fuse_operations.h */,
 				059D9F981EAF52E600CA3ED0 /* Constants.h */,
 				059D9F991EAF70FE00CA3ED0 /* helpers.h */,
+				055B1CAA1EB7AFBE00E9C0C3 /* dataStructures.h */,
 			);
 			path = OSA3;
 			sourceTree = "<group>";
