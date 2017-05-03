@@ -29,12 +29,12 @@ void* haiga_init(struct fuse_conn_info *conn)
 
 
 // As getattr, but called when fgetattr(2) is invoked by the user program.
-static int haiga_fgetattr(const char* path, struct stat* stbuf, struct fuse_file_info * fileInfo)
-{
-    printf("F GETARR FUNCTION \n");
-    
-    return 0;
-}
+//static int haiga_fgetattr(const char* path, struct stat* stbuf, struct fuse_file_info * fileInfo)
+//{
+//    printf("F GETARR FUNCTION \n");
+//    
+//    return 0;
+//}
 
 //This is the same as the access(2) system call. It returns -ENOENT if the path doesn't exist, -EACCESS if the requested permission isn't available, or 0 for success. Note that it can be called on files, directories, or any other object that appears in the filesystem. This call is not required but is highly recommended.
 /**
@@ -199,32 +199,30 @@ static int haiga_fsyncDir(const char* path, int isdatasync, struct fuse_file_inf
 }
 
 // Called on each close so that the filesystem has a chance to report delayed errors. Important: there may be more than one flush call for each open. Note: There is no guarantee that flush will ever be called at all!
-static int haiga_flush(const char* path, struct fuse_file_info* fi)
-{
-    printf("FLUSH FUNCTION \n");
-    return 0;
-}
+//static int haiga_flush(const char* path, struct fuse_file_info* fi)
+//{
+//    printf("FLUSH FUNCTION \n");
+//    return 0;
+//}
 
 // Perform a POSIX file-locking operation. See details below.
-static int haiga_lock(const char* path, struct fuse_file_info* fi, int cmd, struct flock* locks)
-{
-    printf("LOCK FUNCTION \n");
-    
-    return 0;
-}
+//static int haiga_lock(const char* path, struct fuse_file_info* fi, int cmd, struct flock* locks)
+//{
+//    printf("LOCK FUNCTION \n");
+//    
+//    return 0;
+//}
 
 
 // This function is similar to bmap(9). If the filesystem is backed by a block device, it converts blockno from a file-relative block number to a device-relative block. It isn't entirely clear how the blocksize parameter is intended to be used.
-static int haiga_bmap(const char* path, size_t blocksize, uint64_t* blockno)
-{
-    printf("BMAP FUNCTION \n");
-    return 0;
-}
+//static int haiga_bmap(const char* path, size_t blocksize, uint64_t* blockno)
+//{
+//    printf("BMAP FUNCTION \n");
+//    return 0;
+//}
 
 
 // Set an extended attribute. See setxattr(2). This should be implemented only if HAVE_SETXATTR is true.
-
-
 static int haiga_setxattr(const char* path, const char* name, const char* value, size_t size, int flags, uint32_t position)
 {
     printf("SETXATTR FUNCTION \n");
@@ -239,11 +237,11 @@ static int haiga_getxattr(const char* path, const char* name, char* value, size_
     return 0;
 }
 // List the names of all extended attributes. See listxattr(2). This should be implemented only if HAVE_SETXATTR is true.
-static int haiga_listxattr(const char* path, char* list, size_t size)
-{
-    printf("LISTXTTR FUNCTION \n");
-    return 0;
-}
+//static int haiga_listxattr(const char* path, char* list, size_t size)
+//{
+//    printf("LISTXTTR FUNCTION \n");
+//    return 0;
+//}
 //       Support the ioctl(2) system call. As such, almost everything is up to the filesystem. On a 64-bit machine, FUSE_IOCTL_COMPAT will be set for 32-bit ioctls. The size and direction of data is determined by _IOC_*() decoding of cmd. For _IOC_NONE, data will be NULL; for _IOC_WRITE data is being written by the user; for _IOC_READ it is being read, and if both are set the data is bidirectional. In all non-NULL cases, the area is _IOC_SIZE(cmd) bytes in size.
 //static int haiga_ioctl(const char* path, int cmd, void* arg, struct fuse_file_info* fi, unsigned int flags, void* data)
 //{
@@ -359,13 +357,13 @@ static int haiga_truncate(const char *path, off_t offset)
  *
  * Introduced in version 2.6
  */
-static int haiga_utimens(const char *path, const struct timespec tv[2])
-{
-    printf("UTIMENS FUNCTION \n");
-   
-    
-    return 0;
-}
+//static int haiga_utimens(const char *path, const struct timespec tv[2])
+//{
+//    printf("UTIMENS FUNCTION \n");
+//   
+//    
+//    return 0;
+//}
 
 
 
