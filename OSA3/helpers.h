@@ -16,6 +16,8 @@ void readAllFileNamesFromiNodeZero();
 void readFileNamesFromBlock();
 int canBlockSaveFileName(int dataBlockNumber, const char* filename);
 int saveFileNameAndiNodeInBlock(int dataBlockNumber, const char* filename, int iNodeNumber);
+int doesFileExistWithFileName(const char* filename);
+int createNewFile(const char* filename);
 
 /**
  * Return size in bytes, size of the file represented by the fileNumber
@@ -167,6 +169,19 @@ void readFileNamesFromBlock(int dataBlockNumber) {
 }
 
 
+// MARK: Creating new file
+
+/**
+ * Creates an entry in the iNode0 for the given filename
+ * and assign an inode for this file
+ */
+int createNewFile(const char* filename) {
+#warning Incompete method 
+    
+    // Find the first free inode and then link this file with this inode.
+    return 0;
+}
+
 // MARK: Writing filenames to datablocks pointed by iNode0
 
 int addFileNameforiNode(const char* fileName, int iNodeNumber) {
@@ -275,13 +290,35 @@ int canBlockSaveFileName(int dataBlockNumber, const char* filename) {
 }
 
 
-/**
- * Check if our filesystem already has this file
- */
 
+/**
+ * Check if our filesystem already has this file.
+ * Returns the iNode number that knows where the contents of this file are present
+ * or returns -1 if the file with "filename" is not found.
+ */
+int getiNodeNumberForFile(const char* filename) {
+    
+    int inodeNumber = doesFileExistWithFileName(filename);
+    if (inodeNumber == 0) {
+        return -1;
+    }
+    return inodeNumber;
+}
+
+/**
+ * Check if our filesystem already has this file.
+ * Returns > 0 on success.
+ * return 0 on failure.
+ */
 int doesFileExistWithFileName(const char* filename) {
     
-    return 1; // return true
+    for (int i=0 ; i<currentFileNameCount; i++) {
+        if (strcmp(filename, iNodeZeroFileNames[i].fileName) == 0) {
+            return iNodeZeroFileNames[i].iNodeNumber; // return iNode 0 of the file
+        }
+    }
+    
+    return 0; // return false
 }
 
 

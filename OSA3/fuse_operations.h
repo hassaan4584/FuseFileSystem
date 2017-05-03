@@ -9,7 +9,7 @@
 #ifndef fuse_operations_h
 #define fuse_operations_h
 #include "Constants.h"
-
+#include "helpers.h"
 
 // Called when the filesystem exits. The private_data comes from the return value of init.
 static void haiga_destroy(void* private_data)
@@ -84,22 +84,23 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
 {
     printf("WRITE FUNCTION \n");
     
-    int fileNumber = -1;
-    int isFileFound = 0;
-    for (int i=0; i<INODE_COUNT ; i++) {
-        if (strcmp(path, fileNamesArr[i]) == 0) {
-            isFileFound = 1;
-            fileNumber = i;
-        }
-    }
-    if (isFileFound == 0) {
-        return -ENOENT;
-    }
+//    int fileNumber = -1;
+//    int isFileFound = 0;
+//    for (int i=0; i<INODE_COUNT ; i++) {
+//        if (strcmp(path, fileNamesArr[i]) == 0) {
+//            isFileFound = 1;
+//            fileNumber = i;
+//        }
+//    }
+//    if (isFileFound == 0) {
+////        return -ENOENT;
+//    }
 
     if ((int)size > (8*1024)) {
         return -EFBIG;
     }
-    fseek(filehd, fileNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+    int iNodeNumber = getiNodeNumberForFile(path+1);
+    fseek(filehd, iNodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
     
     int *fileSize = malloc(sizeof(int));
@@ -115,7 +116,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
     int *blockNumber = malloc(sizeof(int));
     for (int i=0 ; i<numberOfBlocks; i++) {
-        fseek(filehd, ((fileNumber*INODE_SIZE)+4+(4*i)), SEEK_SET); // Read block number from our iNode
+        fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+(4*i)), SEEK_SET); // Read block number from our iNode
         fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
         
         if (*blockNumber == -1) { // previously this block pointed to no data
@@ -133,7 +134,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
         fwrite((void*)(buf+(i*BLOCK_SIZE)), BLOCK_SIZE, 1, filehd);
     }
     
-    fseek(filehd, ((fileNumber*INODE_SIZE)+4+28), SEEK_SET); // Read last block number from our iNode
+    fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+28), SEEK_SET); // Read last block number from our iNode
     fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
     if (*blockNumber == -1) { // previously this block pointed to no data
         fseek(filehd, -sizeof(int), SEEK_CUR); // moving back the file pointer so that we can assign this inode a new block to write its data to.
@@ -150,7 +151,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     fwrite((void*)(buf+(numberOfBlocks*BLOCK_SIZE)), lastBlockDataSize, 1, filehd);
     
     int bytesWritten = (int)strlen(buf);
-    fseek(filehd, fileNumber*INODE_SIZE, SEEK_SET); // Again Go to the inode number
+    fseek(filehd, iNodeNumber*INODE_SIZE, SEEK_SET); // Again Go to the inode number
     fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
 
     return bytesWritten;
@@ -266,6 +267,7 @@ static int haiga_create(const char *path, mode_t mod, struct fuse_file_info *fi)
 {
     printf("CREATE FUNCTION \n");
     
+    createNewFile(path+1);
 //    fi->flags = O_RDWR;
 //    mod = S_IFREG | 0666;
 
