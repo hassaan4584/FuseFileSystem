@@ -82,10 +82,8 @@ void initializeLogFile() {
         for(int j=0 ; j<8 ; j++) {
             fwrite((void*)&blockNumber, sizeof(int), 1, filehd); // initializing next 32 bytes with eigh 4 byte block numbers
         }
-        
         fseek(filehd, 4, SEEK_CUR); // Leaving the last 4 bytes of the inode empty
     }
-    
 }
 
 /**
@@ -135,8 +133,6 @@ void readAllFileNamesFromiNodeZero() {
 }
 
 
-
-
 /**
  * Read and store data of specific blockNumber of iNode0 in the global
  * data structure representing iNodeNumber and filename
@@ -149,29 +145,12 @@ void readFileNamesFromBlock(int dataBlockNumber) {
     
     // read, parse and save the filenames in the global iNodeZeroFilesNames array
     char data[BLOCK_SIZE];
-//    fread((void*)(data), BLOCK_SIZE, 1, filehd);
-    
-    char iNodeStr[10];
     char fileNameStr[MAX_FILENAME_LENGTH] = "\0";
-    
-    
     // we will loop and read all iNode and FileName combinations and store in iNodeZeroFileNames array
-#warning i am not sure if the following line of code would work as i think it would. Please verify this.
-    size_t totalBytesParsed = 0;
     int iNodeNumber = -1;
     fscanf(filehd,"%d %s\n", &iNodeNumber, fileNameStr);
   while (strlen(fileNameStr) > 0 && iNodeNumber > 0) {
   
-//        sscanf (data, "%s %s", iNodeStr, fileNameStr);
-//        size_t bytesParsed = strlen(iNodeStr) + strlen(fileNameStr) + 2;
-//        totalBytesParsed += bytesParsed;
-//      if (strlen(iNodeStr) <= 0) {
-//          return;
-//      }
-//        iNodeNumber = atoi(iNodeStr);
-//        if (iNodeNumber <= 0) {
-//            return;
-//        }
         strcpy(iNodeZeroFileNames[currentFileNameCount].fileName, fileNameStr);
         iNodeZeroFileNames[currentFileNameCount].iNodeNumber = iNodeNumber;
         currentFileNameCount++;
@@ -212,7 +191,6 @@ int createNewFile(const char* filename) {
         
         return iNodeNo;
     }
-    
     return -1;
 }
 
@@ -355,7 +333,6 @@ int doesFileExistWithFileName(const char* filename) {
             return iNodeZeroFileNames[i].iNodeNumber; // return iNode 0 of the file
         }
     }
-    
     return 0; // return false
 }
 
