@@ -59,12 +59,9 @@ static int blocksUsed   = 0;
 static int currentFileNameCount  = 0;
 
 /**
- *
- * Number of the last iNode that we updated.
- *
+ * For Part 3. Number of files that are currently present in the filesystem.
  */
-static int lastInodeWritten = 1;
-#warning each time we start the filesystem this would be set to 0
+static int totalFileCount  = 0;
 
 const char* LOG_FILE_PATH   = "/Users/Hassaan/Desktop/haiga_lfs.txt";
 const char* BLOCK_COUNT_FILE_PATH   = "/Users/Hassaan/Desktop/blockCount.txt";

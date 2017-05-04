@@ -15,15 +15,16 @@ void initializeINodeZero();
 void readAllFileNamesFromiNodeZero();
 void readFileNamesFromBlock();
 int canBlockSaveFileName(int dataBlockNumber, const char* filename);
+int addFileNameforiNode(const char* fileName, int iNodeNumber);
 int saveFileNameAndiNodeInBlock(int dataBlockNumber, const char* filename, int iNodeNumber);
 int doesFileExistWithFileName(const char* filename);
 int createNewFile(const char* filename);
 
 /**
- * Return size in bytes, size of the file represented by the fileNumber
+ * Return size in bytes, size of the file represented by the iNodeNumber
  */
-int getSizeOfFile(int fileNumber) {
-    fseek(filehd, fileNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+int getSizeOfFile(int iNodeNumber) {
+    fseek(filehd, iNodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
     
     int *fileSize = malloc(sizeof(int));
@@ -120,6 +121,7 @@ void readAllFileNamesFromiNodeZero() {
         return; // there are currently no files present in the filesystem.
     }
     
+    currentFileNameCount=0; // restart index for reading all the filenames.
     for (int i=0 ; i<8; i++) {
         // Go to the next block number
         fseek(filehd, (i*INODE_SIZE)+4, SEEK_SET);
@@ -152,18 +154,36 @@ void readFileNamesFromBlock(int dataBlockNumber) {
     
     // read, parse and save the filenames in the global iNodeZeroFilesNames array
     char data[BLOCK_SIZE];
-    fread((void*)(data), BLOCK_SIZE, 1, filehd);
+//    fread((void*)(data), BLOCK_SIZE, 1, filehd);
     
     char iNodeStr[10];
-    char fileNameStr[MAX_FILENAME_LENGTH];
+    char fileNameStr[MAX_FILENAME_LENGTH] = "\0";
     
     
     // we will loop and read all iNode and FileName combinations and store in iNodeZeroFileNames array
 #warning i am not sure if the following line of code would work as i think it would. Please verify this.
-    sscanf (data, "%s %s\n%s", iNodeStr, fileNameStr, data);
-    int iNodeNumber = atoi(iNodeStr);
-    strcpy(iNodeZeroFileNames[0].fileName, fileNameStr);
-    iNodeZeroFileNames[0].iNodeNumber = iNodeNumber;
+    size_t totalBytesParsed = 0;
+    int iNodeNumber = -1;
+    fscanf(filehd,"%d %s\n", &iNodeNumber, fileNameStr);
+  while (strlen(fileNameStr) > 0 && iNodeNumber > 0) {
+  
+//        sscanf (data, "%s %s", iNodeStr, fileNameStr);
+//        size_t bytesParsed = strlen(iNodeStr) + strlen(fileNameStr) + 2;
+//        totalBytesParsed += bytesParsed;
+//      if (strlen(iNodeStr) <= 0) {
+//          return;
+//      }
+//        iNodeNumber = atoi(iNodeStr);
+//        if (iNodeNumber <= 0) {
+//            return;
+//        }
+        strcpy(iNodeZeroFileNames[currentFileNameCount].fileName, fileNameStr);
+        iNodeZeroFileNames[currentFileNameCount].iNodeNumber = iNodeNumber;
+        currentFileNameCount++;
+      iNodeNumber = -1;
+      strcpy(fileNameStr, "");
+      fscanf(filehd,"%d %s\n", &iNodeNumber, fileNameStr);
+  }
 
 
 }
@@ -173,26 +193,49 @@ void readFileNamesFromBlock(int dataBlockNumber) {
 
 /**
  * Creates an entry in the iNode0 for the given filename
- * and assign an inode for this file
+ * and assign an inode for this file.
+ * Returns > 0 iNodeNumber value if a new entry is created.
+ * Returns -1 otherwise.
  */
 int createNewFile(const char* filename) {
-#warning Incompete method 
     
-    // Find the first free inode and then link this file with this inode.
-    return 0;
+    if (doesFileExistWithFileName(filename) > 0) {
+        return -1; // File already exists, do nothing
+    }
+    int iNodeNo = addFileNameforiNode(filename, totalFileCount+1); // we have added +1 here because we doo not want to write anything to iNode0
+    if (iNodeNo > 0) {
+        
+        fseek(filehd, 0, SEEK_SET); // Go to the 0th inode
+        // First 4 bytes of inode0 will represent number of files present in the filesystem
+        
+        fread(&totalFileCount, sizeof(int), 1, filehd); // get current count
+        totalFileCount++; // increment count
+        
+        // update the overall count of the saved files
+        fseek(filehd, 0, SEEK_SET); 
+        fwrite(&totalFileCount, sizeof(int), 1, filehd);
+        
+        return iNodeNo;
+    }
+    
+    return -1;
 }
 
 // MARK: Writing filenames to datablocks pointed by iNode0
 
+/**
+ * Returns > 0 iNodeNumber value if a new entry is created.
+ * Returns -1 otherwise.
+ */
 int addFileNameforiNode(const char* fileName, int iNodeNumber) {
     
     fseek(filehd, 0, SEEK_SET); // Go to the 0th inode
-    // First 4 bytes of this inode will represent number of files present in the filesystem
+    // First 4 bytes of the inode0 will represent number of files present in the filesystem
     
     int *fileCount = malloc(sizeof(int));
     fread(fileCount, sizeof(int), 1, filehd); // get total number of files present in the filesystem
     if (*fileCount == 0) {
-        return 0; // there are currently no files present in the filesystem.
+//        return 0; // there are currently no files present in the filesystem.
     }
     
     for (int i=0 ; i<8; i++) {
@@ -210,12 +253,12 @@ int addFileNameforiNode(const char* fileName, int iNodeNumber) {
         }
         if (canBlockSaveFileName(blockNumber, fileName) == 1) {
             saveFileNameAndiNodeInBlock(blockNumber, fileName, iNodeNumber);
-            return 1;
+            return iNodeNumber;
         }
         
         
     } // end for
-    return 0;
+    return -1;
 }
 
 
@@ -251,8 +294,8 @@ int saveFileNameAndiNodeInBlock(int dataBlockNumber, const char* filename, int i
     else
         bytesForBlockNumber = 4; // 4 digit number
     
-    int bufferLength = bytesForBlockNumber + (int)strlen(filename) + 1; // iNodeNumber FileName NewLine
-    char buffer[bufferLength+1];
+    int bufferLength = bytesForBlockNumber + 1 + (int)strlen(filename) + 2; // iNodeNumber space FileName NewLine
+    char buffer[bufferLength];
     snprintf(buffer, bufferLength, "%d %s\n", iNodeNumber, filename);
     
     // write iNodeNumber and filename to the logFile
@@ -312,7 +355,7 @@ int getiNodeNumberForFile(const char* filename) {
  */
 int doesFileExistWithFileName(const char* filename) {
     
-    for (int i=0 ; i<currentFileNameCount; i++) {
+    for (int i=0 ; i<totalFileCount; i++) {
         if (strcmp(filename, iNodeZeroFileNames[i].fileName) == 0) {
             return iNodeZeroFileNames[i].iNodeNumber; // return iNode 0 of the file
         }

@@ -25,7 +25,7 @@ int gettimeofday(struct timeval *restrict tp, void *restrict tzp);
 
 static int haiga_getattr(const char *path, struct stat *stbuf)
 {
-    printf("Get Attr FUNCTION Moun\n");
+    printf("Get Attr FUNCTION PATH: %s\n", path);
 	int res = 0;
 
     struct timeval tv;
@@ -55,6 +55,24 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
                 return res;
             }
         }
+        for (int i=0 ; i<totalFileCount ; i++) {
+            if (strcmp(path, iNodeZeroFileNames[i].fileName) == 0) {
+                stbuf->st_mode = S_IFREG | 0666;
+                stbuf->st_nlink = 1;
+                int iNodeNo = iNodeZeroFileNames[i].iNodeNumber;
+                stbuf->st_size = getSizeOfFile(iNodeNo);
+                gettimeofday(&tv, NULL);
+                ts.tv_sec = tv.tv_sec;
+                ts.tv_nsec = 0;
+                stbuf->st_ctimespec = ts;
+                //                stbuf->st_birthtimespec = ts;
+                //                stbuf->st_atimespec = ts;
+                stbuf->st_mtimespec = ts;
+
+                return res;
+            }
+
+        }
     }
     
     res = -ENOENT;
@@ -78,6 +96,10 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     for(int i=0 ; i<INODE_COUNT-1020 ; i++) {
         filler(buf, fileNamesArr[i] + 1, NULL, 0);
     }
+    readAllFileNamesFromiNodeZero();
+    for (int i=0 ; i<totalFileCount ; i++) {
+        filler(buf, iNodeZeroFileNames[i].fileName + 1, NULL, 0);
+    }
 	return 0;
 }
 
@@ -91,13 +113,15 @@ static int haiga_open(const char *path, struct fuse_file_info *fi)
             isFileFound = 1;
         }
     }
+    for (int i=0 ; i<totalFileCount ; i++) {
+        if (strcmp(path, iNodeZeroFileNames[i].fileName) == 0) {
+            isFileFound = 1;
+        }
+    }
     if (isFileFound == 0) {
         return -ENOENT;
     }
     fi->flags = O_RDWR;
-
-//	if ((fi->flags & 3) != O_RDONLY)
-//		return -EACCES;
 
 	return 0;
 }
@@ -114,6 +138,12 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
         if (strcmp(path, fileNamesArr[i]) == 0) {
             isFileFound = 1;
             inodeNumber = i;
+        }
+    }
+    for (int i=0 ; i<totalFileCount ; i++) {
+        if (strcmp(path, iNodeZeroFileNames[i].fileName) == 0) {
+            isFileFound = 1;
+            inodeNumber = iNodeZeroFileNames[i].iNodeNumber;
         }
     }
     if (isFileFound == 0) {

@@ -99,7 +99,10 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     if ((int)size > (8*1024)) {
         return -EFBIG;
     }
-    int iNodeNumber = getiNodeNumberForFile(path+1);
+    int iNodeNumber = getiNodeNumberForFile(path);
+    if (iNodeNumber < 0 ) {
+        return 0;
+    }
     fseek(filehd, iNodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
     
@@ -267,7 +270,7 @@ static int haiga_create(const char *path, mode_t mod, struct fuse_file_info *fi)
 {
     printf("CREATE FUNCTION \n");
     
-    createNewFile(path+1);
+    createNewFile(path);
 //    fi->flags = O_RDWR;
 //    mod = S_IFREG | 0666;
 
