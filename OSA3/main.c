@@ -131,7 +131,7 @@ static int haiga_open(const char *path, struct fuse_file_info *fi)
 static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
 		      struct fuse_file_info *fi)
 {
-    printf("READ FUNCTION \n");
+    printf("READ FUNCTION with Path: %s\n", path );
 	(void) fi;
     int inodeNumber = -1;
     int isFileFound = 0;
