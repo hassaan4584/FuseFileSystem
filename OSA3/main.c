@@ -55,6 +55,7 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
                 return res;
             }
         }
+        readAllFileNamesFromiNodeZero();
         for (int i=0 ; i<totalFileCount ; i++) {
             if (strcmp(path, iNodeZeroFileNames[i].fileName) == 0) {
                 stbuf->st_mode = S_IFREG | 0666;

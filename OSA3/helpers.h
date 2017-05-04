@@ -114,12 +114,7 @@ void readAllFileNamesFromiNodeZero() {
     
     fseek(filehd, 0, SEEK_SET); // Go to the 0th inode
     // First 4 bytes of this inode will represent number of files present in the filesystem
-    
-    int *fileCount = malloc(sizeof(int));
-    fread(fileCount, sizeof(int), 1, filehd); // get total number of files present in the filesystem
-    if (*fileCount == 0) {
-        return; // there are currently no files present in the filesystem.
-    }
+    fread(&totalFileCount, sizeof(int), 1, filehd); // get total number of files present in the filesystem
     
     currentFileNameCount=0; // restart index for reading all the filenames.
     for (int i=0 ; i<8; i++) {
