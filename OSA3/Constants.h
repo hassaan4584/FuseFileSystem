@@ -63,10 +63,10 @@ static int currentFileNameCount  = 0;
  */
 static int totalFileCount  = 0;
 
-const char* LOG_FILE_PATH   = "/Users/Hassaan/Desktop/haiga_lfs.txt";
-const char* BLOCK_COUNT_FILE_PATH   = "/Users/Hassaan/Desktop/blockCount.txt";
+const char* LOG_FILE_PATH   = "/Users/Hassaan/Desktop/haiga_lfs-Part4.txt";
+const char* BLOCK_COUNT_FILE_PATH   = "/Users/Hassaan/Desktop/blockCount-P4.txt";
 
-static char fileNamesArr[INODE_COUNT][MAX_FILENAME_LENGTH];
+//static char fileNamesArr[INODE_COUNT][MAX_FILENAME_LENGTH];
 
 /**
  * For Part 3. Names of all the files saved in iNode0

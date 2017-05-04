@@ -39,22 +39,6 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
         return res;
 	}
     else {
-        for (int i=0; i<INODE_COUNT ; i++) {
-            if (strcmp(path, fileNamesArr[i]) == 0) {
-                stbuf->st_mode = S_IFREG | 0666;
-                stbuf->st_nlink = 1;
-                stbuf->st_size = getSizeOfFile(i);
-                gettimeofday(&tv, NULL);
-                ts.tv_sec = tv.tv_sec;
-                ts.tv_nsec = 0;
-                stbuf->st_ctimespec = ts;
-//                stbuf->st_birthtimespec = ts;
-//                stbuf->st_atimespec = ts;
-                stbuf->st_mtimespec = ts;
-
-                return res;
-            }
-        }
         readAllFileNamesFromiNodeZero();
         for (int i=0 ; i<totalFileCount ; i++) {
             if (strcmp(path, iNodeZeroFileNames[i].fileName) == 0) {
@@ -66,8 +50,8 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
                 ts.tv_sec = tv.tv_sec;
                 ts.tv_nsec = 0;
                 stbuf->st_ctimespec = ts;
-                //                stbuf->st_birthtimespec = ts;
-                //                stbuf->st_atimespec = ts;
+                stbuf->st_birthtimespec = ts;
+                stbuf->st_atimespec = ts;
                 stbuf->st_mtimespec = ts;
 
                 return res;
@@ -94,9 +78,6 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-    for(int i=0 ; i<INODE_COUNT-1020 ; i++) {
-        filler(buf, fileNamesArr[i] + 1, NULL, 0);
-    }
     readAllFileNamesFromiNodeZero();
     for (int i=0 ; i<totalFileCount ; i++) {
         filler(buf, iNodeZeroFileNames[i].fileName + 1, NULL, 0);
@@ -109,11 +90,6 @@ static int haiga_open(const char *path, struct fuse_file_info *fi)
 {
     printf("OPEN FUNCTION \n");
     int isFileFound = 0;
-    for (int i=0; i<INODE_COUNT ; i++) {
-        if (strcmp(path, fileNamesArr[i]) == 0) {
-            isFileFound = 1;
-        }
-    }
     for (int i=0 ; i<totalFileCount ; i++) {
         if (strcmp(path, iNodeZeroFileNames[i].fileName) == 0) {
             isFileFound = 1;
@@ -135,12 +111,6 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
 	(void) fi;
     int inodeNumber = -1;
     int isFileFound = 0;
-    for (int i=0; i<INODE_COUNT ; i++) {
-        if (strcmp(path, fileNamesArr[i]) == 0) {
-            isFileFound = 1;
-            inodeNumber = i;
-        }
-    }
     for (int i=0 ; i<totalFileCount ; i++) {
         if (strcmp(path, iNodeZeroFileNames[i].fileName) == 0) {
             isFileFound = 1;
@@ -239,9 +209,9 @@ static struct fuse_operations haiga_operations = {
 
 int main(int argc, char *argv[])
 {
-    for(int i=0 ; i<INODE_COUNT ; i++) {
-        sprintf(fileNamesArr[i], "/%d", i);
-    }
+//    for(int i=0 ; i<INODE_COUNT ; i++) {
+//        sprintf(fileNamesArr[i], "/%d", i);
+//    }
     initializeUsedBlockCount(); // setting the global blocks used variable
     
     filehd = fopen(LOG_FILE_PATH, "r+");
