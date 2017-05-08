@@ -3,6 +3,26 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "haiga_open:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "haiga_getattr:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "haiga_readdir:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "haiga_read:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "readAllFileNamesFromiNodeZero:helpers.h">
+         <PersistentStrings>
+            <PersistentString
+               value = "iNodeZeroFileNames">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "haiga_destroy:fuse_operations.h">
          <PersistentStrings>
             <PersistentString
@@ -15,9 +35,6 @@
       </ContextState>
       <ContextState
          contextName = "haiga_init:fuse_operations.h">
-      </ContextState>
-      <ContextState
-         contextName = "haiga_open:main.c">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

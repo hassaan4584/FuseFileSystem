@@ -80,7 +80,9 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	filler(buf, "..", NULL, 0);
     readAllFileNamesFromiNodeZero();
     for (int i=0 ; i<totalFileCount ; i++) {
-        filler(buf, iNodeZeroFileNames[i].fileName + 1, NULL, 0);
+        if (strlen(iNodeZeroFileNames[i].fileName) > 0) {
+            filler(buf, iNodeZeroFileNames[i].fileName + 1, NULL, 0);
+        }
     }
 	return 0;
 }
@@ -130,7 +132,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
 
     int *fileSize = malloc(sizeof(int));
     fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
-    *fileSize = ((*fileSize) < (int)strlen(buf)) ? *fileSize : (int)strlen(buf);
+    *fileSize = ((*fileSize) < (int)size) ? *fileSize : (int)size;
 
     if (offset > *fileSize) {
         return 0;
@@ -146,13 +148,14 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
             return 0; // There is no data in this block.
         }
         else {
-            int dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE);
+            size_t dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE);
             fseek(filehd, dataBlockLocation, SEEK_SET); // Go to the ith data block of the iNode
             // we will read complete BLOCK_SIZE bytes from this block because it is not the last data block of this file and hence it is completely filled
             fread((void*)(buf+(i*BLOCK_SIZE)), BLOCK_SIZE, 1, filehd);
         }
     }
     
+//    fseek(filehd, ((inodeNumber*INODE_SIZE)+4+(4*numberOfBlocks)), SEEK_SET); // Get to the last block number from our iNode
     fseek(filehd, ((inodeNumber*INODE_SIZE)+4+28), SEEK_SET); // Get to the last block number from our iNode
     fread(blockNumber, sizeof(int), 1, filehd); // Read last block number from our iNode
     if (*blockNumber == -1) {
@@ -160,9 +163,12 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     }
     
     int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
-    int lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
+    size_t lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
     fseek(filehd, lastBlockStartLocation, SEEK_SET);
-    fread((void*)(buf+(numberOfBlocks*BLOCK_SIZE)), lastBlockDataSize, 1, filehd);
+    char data[BLOCK_SIZE] = "\0";
+    int reading = fread((void*)(data), lastBlockDataSize, 1, filehd);
+    memcpy(buf, data , lastBlockDataSize);
+//    fread((void*)(buf+(numberOfBlocks*BLOCK_SIZE)), lastBlockDataSize, 1, filehd);
     int totalBytesRead = (numberOfBlocks*BLOCK_SIZE) + lastBlockDataSize;
     
     return totalBytesRead;
@@ -178,10 +184,10 @@ static struct fuse_operations haiga_operations = {
     .destroy    = haiga_destroy,
     .init       = haiga_init,
 //    .fgetattr   = haiga_fgetattr,
-    .access     = haiga_access,
+//    .access     = haiga_access,
     .mknod      = haiga_mknod,
     .write      = haiga_write,
-    .statfs     = haiga_statfs,
+//    .statfs     = haiga_statfs,
     .release    = haiga_release,
     .releasedir = haiga_releaseDir,
     .fsync      = haiga_fsync,
@@ -189,21 +195,21 @@ static struct fuse_operations haiga_operations = {
 //    .flush      = haiga_flush,
 //    .lock       = haiga_lock,
 //    .bmap       = haiga_bmap,
-    .setxattr   = haiga_setxattr,
-    .getxattr   = haiga_getxattr,
+//    .setxattr   = haiga_setxattr,
+//    .getxattr   = haiga_getxattr,
 //    .listxattr  = haiga_listxattr,
     .create     = haiga_create,
     .readlink   = haiga_readlink,
-    .mkdir      = haiga_mkdir,
-    .unlink     = haiga_unlink,
-    .rmdir      = haiga_rmdir,
-    .link       = haiga_link,
+//    .mkdir      = haiga_mkdir,
+//    .unlink     = haiga_unlink,
+//    .rmdir      = haiga_rmdir,
+//    .link       = haiga_link,
     .chmod      = haiga_chmod,
     .chown      = haiga_chown,
     .truncate   = haiga_truncate,
 //    .utimens    = haiga_utimens,
     .rename     = haiga_rename,
-    .symlink    = haiga_symlink,
+//    .symlink    = haiga_symlink,
     
 };
 

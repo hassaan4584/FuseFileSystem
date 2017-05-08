@@ -49,12 +49,12 @@ void* haiga_init(struct fuse_conn_info *conn)
  * Introduced in version 2.5
  */
 
-static int haiga_access(const char* path, int mask)
-{
-    printf("ACCESS FUNCTION \n");
-    
-    return 0;
-}
+//static int haiga_access(const char* path, int mask)
+//{
+//    printf("ACCESS FUNCTION with path : %s\n", path);
+//    
+//    return 0;
+//}
 
 //Make a special (device) file, FIFO, or socket. See mknod(2) for details. This function is rarely needed, since it's uncommon to make these objects inside special-purpose filesystems.
 /** Create a file node
@@ -65,7 +65,7 @@ static int haiga_access(const char* path, int mask)
  */
 static int haiga_mknod(const char* path, mode_t mode, dev_t rdev)
 {
-    printf("mknod FUNCTION \n");
+    printf("mknod FUNCTION with path : %s \n", path);
     mode = S_IFREG | 0666;
     return 0;
 }
@@ -107,18 +107,6 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     int blockNumber = -1;
     for (int i=0 ; i<numberOfBlocks; i++) {
         fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+(4*i)), SEEK_SET); // Read block number from our iNode
-/* In the parts 1,2 and 3. We checked whether this blockNumber pointed to some valid block or not.
- In the part 4 and onwards, we will forcefully assign it new blocks, hence making it log structured.
-        fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
-        if (*blockNumber == -1) { // previously this block pointed to no data
-            fseek(filehd, -sizeof(int), SEEK_CUR); // moving back the file pointer so that we can assign this inode a new block to write its data to.
-            int *nextFreeBlockNumber = malloc(sizeof(int));
-            *nextFreeBlockNumber = blocksUsed;
-            *blockNumber = blocksUsed; // in this block we will store new data
-            blocksUsed++;
-            fwrite((void*)nextFreeBlockNumber, sizeof(int), 1, filehd); // pointing to the data block that will store "some" data of this file
-        }
- */
         // Forcefully assiging the next free block to store file data
         int nextFreeBlockNumber = blocksUsed;
         blockNumber = blocksUsed; // in this block we will store new data
@@ -126,32 +114,24 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
         fwrite((void*)&nextFreeBlockNumber, sizeof(int), 1, filehd); // pointing to the data block that will store "some" data of this file
 
         // Testing 2.1
-        int dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((blockNumber)*BLOCK_SIZE);
+        size_t dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((blockNumber)*BLOCK_SIZE);
         fseek(filehd, dataBlockLocation, SEEK_SET); // Go to the ith data block of the iNode
         // we will read complete BLOCK_SIZE bytes from this block because it is not the last data block of this file and hence it is completely filled
         fwrite((void*)(buf+(i*BLOCK_SIZE)), BLOCK_SIZE, 1, filehd);
     }
     
+//    fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+(4*numberOfBlocks)), SEEK_SET); // Read last block number from our iNode
     fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+28), SEEK_SET); // Read last block number from our iNode
-/*    fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
-    if (*blockNumber == -1) { // previously this block pointed to no data
-        fseek(filehd, -sizeof(int), SEEK_CUR); // moving back the file pointer so that we can assign this inode a new block to write its data to.
-        int *nextFreeBlockNumber = malloc(sizeof(int));
-        *nextFreeBlockNumber = blocksUsed;
-        *blockNumber = blocksUsed; // in this block we will store new data
-        blocksUsed++;
-        fwrite((void*)nextFreeBlockNumber, sizeof(int), 1, filehd); // pointing to the data block that will store last bytes of this file
-    }
-  */
     int nextFreeBlockNumber = blocksUsed;
     blockNumber = blocksUsed; // in this block we will store new data
     blocksUsed++;
     fwrite((void*)&nextFreeBlockNumber, sizeof(int), 1, filehd); // pointing to the data block that will store last
     
     int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
-    int lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
+    size_t lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
     fseek(filehd, lastBlockStartLocation, SEEK_SET);
-    fwrite((void*)(buf+(numberOfBlocks*BLOCK_SIZE)), lastBlockDataSize, 1, filehd);
+    size_t wrtieOffset = (numberOfBlocks*BLOCK_SIZE);
+    fwrite((void*)(buf+wrtieOffset), lastBlockDataSize, 1, filehd);
     
     int bytesWritten = (int)strlen(buf);
     fseek(filehd, iNodeNumber*INODE_SIZE, SEEK_SET); // Again Go to the inode number
@@ -267,7 +247,7 @@ static int haiga_getxattr(const char* path, const char* name, char* value, size_
 
 static int haiga_create(const char *path, mode_t mod, struct fuse_file_info *fi)
 {
-    printf("CREATE FUNCTION \n");
+    printf("CREATE FUNCTION with path : %s \n", path);
     
     createNewFile(path);
 //    fi->flags = O_RDWR;
@@ -350,7 +330,7 @@ static int haiga_chown(const char *path, uid_t uid, gid_t gid)
 /** Change the size of a file */
 static int haiga_truncate(const char *path, off_t offset)
 {
-    printf("TRUNCATE FUNCTION \n");
+    printf("TRUNCATE FUNCTION with path : %s and offset : %ld\n", path, (long)offset);
     
     return 0;
 }

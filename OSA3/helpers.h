@@ -84,6 +84,7 @@ void initializeLogFile() {
         }
         fseek(filehd, 4, SEEK_CUR); // Leaving the last 4 bytes of the inode empty
     }
+
 }
 
 /**
@@ -140,7 +141,7 @@ void readAllFileNamesFromiNodeZero() {
 void readFileNamesFromBlock(int dataBlockNumber) {
     
     // go to the data block
-    int dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((dataBlockNumber)*BLOCK_SIZE);
+    size_t dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((dataBlockNumber)*BLOCK_SIZE);
     fseek(filehd, dataBlockLocation, SEEK_SET); // Go to the ith data block of the 0th iNode
     
     // read, parse and save the filenames in the global iNodeZeroFilesNames array
@@ -158,7 +159,6 @@ void readFileNamesFromBlock(int dataBlockNumber) {
       strcpy(fileNameStr, "");
       fscanf(filehd,"%d %s\n", &iNodeNumber, fileNameStr);
   }
-
 
 }
 
@@ -246,7 +246,7 @@ int saveFileNameAndiNodeInBlock(int dataBlockNumber, const char* filename, int i
     }
     
     // go to the data block
-    int dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((dataBlockNumber)*BLOCK_SIZE);
+    size_t dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((dataBlockNumber)*BLOCK_SIZE);
     fseek(filehd, dataBlockLocation, SEEK_SET);
     
     char data[BLOCK_SIZE];
@@ -288,7 +288,7 @@ int canBlockSaveFileName(int dataBlockNumber, const char* filename) {
     }
     
     // go to the data block
-    int dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((dataBlockNumber)*BLOCK_SIZE);
+    size_t dataBlockLocation = DATA_BLOCKS_BASE_ADDR + ((dataBlockNumber)*BLOCK_SIZE);
     fseek(filehd, dataBlockLocation, SEEK_SET);
     
     char data[BLOCK_SIZE];
