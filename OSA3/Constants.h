@@ -33,6 +33,16 @@ const int INODE_SIZE        = 40;
 const int INODE_COUNT       = 1024;
 
 /**
+ * The size in bytes of super block.
+ */
+const int SUPER_BLOCK_SIZE  = 1024;
+
+/**
+ * The size in bytes of metadata of filesystem.
+ */
+const int METADATA_SIZE       = 1024;
+
+/**
  * The maximum number of files that the filesystem can handle.
  */
 const int MAX_SUPPORTED_FILE_COUNT  = INODE_COUNT;
@@ -40,12 +50,17 @@ const int MAX_SUPPORTED_FILE_COUNT  = INODE_COUNT;
 /**
  * The maximum length of filename that the filesystem can handle.
  */
-const int MAX_FILENAME_LENGTH  = 100;
+const int MAX_FILENAME_LENGTH       = 100;
 
 /**
- * Base address of the data blcoks. Data blocks start after the iNodes.
+ * Base address of the data blcoks. Data blocks start after the super block and metadata and iNodes.
  */
-const int DATA_BLOCKS_BASE_ADDR     = (INODE_SIZE*INODE_COUNT);
+const int iNODES_BASE_ADDR          = SUPER_BLOCK_SIZE + METADATA_SIZE;
+
+/**
+ * Base address of the data blcoks. Data blocks start after the super block and metadata and iNodes.
+ */
+const int DATA_BLOCKS_BASE_ADDR     = (INODE_SIZE*INODE_COUNT)+SUPER_BLOCK_SIZE+METADATA_SIZE;
 
 /**
  * The number of blocks of data used after INODE_SIZE*INODE_COUNT bytes of data.

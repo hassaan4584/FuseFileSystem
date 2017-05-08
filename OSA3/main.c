@@ -127,7 +127,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     }
 
     
-    fseek(filehd, inodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+    fseek(filehd, getiNodeLocation(inodeNumber), SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
 
     int *fileSize = malloc(sizeof(int));
@@ -142,7 +142,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
     int *blockNumber = malloc(sizeof(int));
     for (int i=0 ; i<numberOfBlocks; i++) {
-        fseek(filehd, ((inodeNumber*INODE_SIZE)+4+(4*i)), SEEK_SET); // Read block number from our iNode
+        fseek(filehd, (getiNodeLocation(inodeNumber)+4+(4*i)), SEEK_SET); // Read block number from our iNode
         fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
         if (*blockNumber == -1) { // previously this block pointed to no data
             return 0; // There is no data in this block.
@@ -156,7 +156,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     }
     
 //    fseek(filehd, ((inodeNumber*INODE_SIZE)+4+(4*numberOfBlocks)), SEEK_SET); // Get to the last block number from our iNode
-    fseek(filehd, ((inodeNumber*INODE_SIZE)+4+28), SEEK_SET); // Get to the last block number from our iNode
+    fseek(filehd, (getiNodeLocation(inodeNumber)+4+28), SEEK_SET); // Get to the last block number from our iNode
     fread(blockNumber, sizeof(int), 1, filehd); // Read last block number from our iNode
     if (*blockNumber == -1) {
         return numberOfBlocks*BLOCK_SIZE; // return the number of bytes that we have written so far in buffer

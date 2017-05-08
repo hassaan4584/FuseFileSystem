@@ -91,7 +91,8 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     if (iNodeNumber < 0 ) {
         return 0;
     }
-    fseek(filehd, iNodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+    int iNodeLocation = getiNodeLocation(iNodeNumber);
+    fseek(filehd, iNodeLocation, SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
     
     int *fileSize = malloc(sizeof(int));
@@ -101,12 +102,17 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     if (offset > *fileSize) {
         return 0;
     }
+    if (*fileSize == 0) {
+        // if this is a new file, previously its size was 0
+        *fileSize = (int) strlen(buf);
+    }
     
     // e.g if the original file size is 2024B then 1024B will be in the first block and remaining 1000B will be in the 2nd/last block
     int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
     int blockNumber = -1;
     for (int i=0 ; i<numberOfBlocks; i++) {
-        fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+(4*i)), SEEK_SET); // Read block number from our iNode
+        int iNodeLocation = getiNodeLocation(iNodeNumber);
+        fseek(filehd, ((iNodeLocation)+4+(4*i)), SEEK_SET); // Read block number from our iNode
         // Forcefully assiging the next free block to store file data
         int nextFreeBlockNumber = blocksUsed;
         blockNumber = blocksUsed; // in this block we will store new data
@@ -121,7 +127,8 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     }
     
 //    fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+(4*numberOfBlocks)), SEEK_SET); // Read last block number from our iNode
-    fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+28), SEEK_SET); // Read last block number from our iNode
+    
+    fseek(filehd, (getiNodeLocation(iNodeNumber)+4+28), SEEK_SET); // Read last block number from our iNode
     int nextFreeBlockNumber = blocksUsed;
     blockNumber = blocksUsed; // in this block we will store new data
     blocksUsed++;
@@ -134,7 +141,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     fwrite((void*)(buf+wrtieOffset), lastBlockDataSize, 1, filehd);
     
     int bytesWritten = (int)strlen(buf);
-    fseek(filehd, iNodeNumber*INODE_SIZE, SEEK_SET); // Again Go to the inode number
+    fseek(filehd, getiNodeLocation(iNodeNumber), SEEK_SET); // Again Go to the inode number
     fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
 
     return bytesWritten;

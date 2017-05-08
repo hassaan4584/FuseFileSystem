@@ -12,6 +12,7 @@
 #include "Constants.h"
 
 void initializeINodeZero();
+int getiNodeLocation(int iNodeNumber);
 void readAllFileNamesFromiNodeZero();
 void readFileNamesFromBlock();
 int canBlockSaveFileName(int dataBlockNumber, const char* filename);
@@ -24,12 +25,21 @@ int createNewFile(const char* filename);
  * Return size in bytes, size of the file represented by the iNodeNumber
  */
 int getSizeOfFile(int iNodeNumber) {
-    fseek(filehd, iNodeNumber*INODE_SIZE, SEEK_SET); // Go to the inode number
+    int iNodeLocation = getiNodeLocation(iNodeNumber);
+    fseek(filehd, iNodeLocation, SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
     
     int *fileSize = malloc(sizeof(int));
     fread(fileSize, sizeof(int), 1, filehd); // get total size of the file
     return *fileSize;
+}
+
+/**
+ * Returns the start byte location of the iNode represented by iNodeNumber
+ */
+int getiNodeLocation(int iNodeNumber) {
+    int location = (iNodeNumber*INODE_SIZE) + iNODES_BASE_ADDR;
+    return location;
 }
 
 
@@ -73,7 +83,7 @@ void initializeLogFile() {
     
     for (int i=1 ; i<INODE_COUNT ; i++) {
         
-        fseek(filehd, i*INODE_SIZE, SEEK_SET);
+        fseek(filehd, getiNodeLocation(i), SEEK_SET);
         int *fileSize = (int*) malloc(sizeof(int));
         *fileSize = 0 ;
         fwrite((void*)fileSize, sizeof(int), 1, filehd); // writing size of the file in the 1st 4 bytes of the inode
@@ -94,7 +104,7 @@ void initializeLogFile() {
  */
 void initializeINodeZero() {
 
-    fseek(filehd, 4, SEEK_SET); // Go to the 4th byte of the 0th iNode
+    fseek(filehd, getiNodeLocation(0)+4, SEEK_SET); // Go to the 4th byte of the 0th iNode
     int blockNumber = -1;
     for(int j=0 ; j<8 ; j++) {
         fwrite((void*)&blockNumber, sizeof(int), 1, filehd); // initializing next 32 bytes with eigh 4 byte block numbers to be null
@@ -111,14 +121,16 @@ void initializeINodeZero() {
  */
 void readAllFileNamesFromiNodeZero() {
     
-    fseek(filehd, 0, SEEK_SET); // Go to the 0th inode
+    fseek(filehd, getiNodeLocation(0), SEEK_SET); // Go to the 0th inode
     // First 4 bytes of this inode will represent number of files present in the filesystem
     fread(&totalFileCount, sizeof(int), 1, filehd); // get total number of files present in the filesystem
     
     currentFileNameCount=0; // restart index for reading all the filenames.
     for (int i=0 ; i<8; i++) {
         // Go to the next block number
-        fseek(filehd, (i*INODE_SIZE)+4, SEEK_SET);
+//        fseek(filehd, (i*INODE_SIZE)+4, SEEK_SET);
+#warning the above code should be as follows.
+        fseek(filehd, getiNodeLocation(0)+(i*INODE_SIZE)+4, SEEK_SET);
         
         // read data block number
         int blockNumber = -1;
@@ -179,14 +191,14 @@ int createNewFile(const char* filename) {
     int iNodeNo = addFileNameforiNode(filename, totalFileCount+1); // we have added +1 here because we doo not want to write anything to iNode0
     if (iNodeNo > 0) {
         
-        fseek(filehd, 0, SEEK_SET); // Go to the 0th inode
+        fseek(filehd, getiNodeLocation(0), SEEK_SET); // Go to the 0th inode
         // First 4 bytes of inode0 will represent number of files present in the filesystem
         
         fread(&totalFileCount, sizeof(int), 1, filehd); // get current count
         totalFileCount++; // increment count
         
         // update the overall count of the saved files
-        fseek(filehd, 0, SEEK_SET); 
+        fseek(filehd, getiNodeLocation(0), SEEK_SET);
         fwrite(&totalFileCount, sizeof(int), 1, filehd);
         
         return iNodeNo;
@@ -202,7 +214,7 @@ int createNewFile(const char* filename) {
  */
 int addFileNameforiNode(const char* fileName, int iNodeNumber) {
     
-    fseek(filehd, 0, SEEK_SET); // Go to the 0th inode
+    fseek(filehd, getiNodeLocation(0), SEEK_SET); // Go to the 0th inode
     // First 4 bytes of the inode0 will represent number of files present in the filesystem
     
     int *fileCount = malloc(sizeof(int));
@@ -213,7 +225,7 @@ int addFileNameforiNode(const char* fileName, int iNodeNumber) {
     
     for (int i=0 ; i<8; i++) {
         // Go to the next block number
-        fseek(filehd, (i*INODE_SIZE)+4, SEEK_SET);
+        fseek(filehd, getiNodeLocation(0)+(i*INODE_SIZE)+4, SEEK_SET);
         
         // read data block number
         int blockNumber = -1;
