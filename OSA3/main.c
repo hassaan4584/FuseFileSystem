@@ -156,7 +156,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     }
     
 //    fseek(filehd, ((inodeNumber*INODE_SIZE)+4+(4*numberOfBlocks)), SEEK_SET); // Get to the last block number from our iNode
-    fseek(filehd, (getiNodeLocation(inodeNumber)+4+28), SEEK_SET); // Get to the last block number from our iNode
+    fseek(filehd, (getiNodeLocation(inodeNumber)+4+(numberOfBlocks*4)), SEEK_SET); // Get to the last block number from our iNode
     fread(blockNumber, sizeof(int), 1, filehd); // Read last block number from our iNode
     if (*blockNumber == -1) {
         return numberOfBlocks*BLOCK_SIZE; // return the number of bytes that we have written so far in buffer
