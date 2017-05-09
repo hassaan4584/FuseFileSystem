@@ -22,6 +22,7 @@ int addFileNameforiNode(const char* fileName, int iNodeNumber);
 int saveFileNameAndiNodeInBlock(int dataBlockNumber, const char* filename, int iNodeNumber);
 int doesFileExistWithFileName(const char* filename);
 int createNewFile(const char* filename);
+void readAllCheckpoints();
 
 /**
  * Return size in bytes, size of the file represented by the iNodeNumber
@@ -420,6 +421,43 @@ void assignNewContainerForiNodeNumber(int iNodeNumber) {
 
     
 }
+
+void readAllCheckpoints() {
+    
+    int iNodeNumber=0;
+    
+    int blockNumber = iNodeNumber / INODES_PER_BLOCK;
+    
+    int newiNodeContainerBlock = -1;
+    fseek(filehd, METADATA_SIZE+(blockNumber*4) , SEEK_SET); // read block number in which the specific iNode is stored.
+    int prevStartLocation = -1;
+    int iNodeContainerBlock = -1;
+    fread(&iNodeContainerBlock, sizeof(int), 1, filehd);
+    if (iNodeContainerBlock == -1) {
+        prevStartLocation = (iNodeNumber*INODE_SIZE) + iNODES_BASE_ADDR;
+    }
+    else {
+        int containerBlockLocation = DATA_BLOCKS_BASE_ADDR + iNodeContainerBlock*BLOCK_SIZE;
+        prevStartLocation = containerBlockLocation;
+    }
+    fseek(filehd, -sizeof(int), SEEK_CUR);
+    fwrite(&blocksUsed, sizeof(int), 1, filehd);
+    newiNodeContainerBlock = blocksUsed;
+    blocksUsed++;
+    
+    int newStartLocation = DATA_BLOCKS_BASE_ADDR + newiNodeContainerBlock*BLOCK_SIZE;
+    
+    for (int i=0; i<(1024/4); i++) {
+        int data = 0;
+        fseek(filehd, prevStartLocation+(i*sizeof(int)), SEEK_SET);
+        fread(&data, sizeof(int), 1, filehd); // reading 4 bytes from previous-to-be block
+        
+        fseek(filehd, newStartLocation+(i*sizeof(int)), SEEK_SET);
+        fwrite(&data, sizeof(int), 1, filehd); // copying data to the newly allocated block
+    }
+    
+}
+
 
 
 

@@ -38,6 +38,11 @@ static int haiga_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_nlink = 2;
         return res;
 	}
+    else if (strcmp(path, "/checkpoints") == 0) {
+        stbuf->st_mode = S_IFDIR | 0755;
+        stbuf->st_nlink = 2;
+        return res;
+    }
     else {
         readAllFileNamesFromiNodeZero();
         for (int i=0 ; i<totalFileCount ; i++) {
@@ -75,9 +80,16 @@ static int haiga_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	if (strcmp(path, "/") != 0)
 		return -ENOENT;
+    
+    if (strcmp(path, "/checkpoints") == 0) {
+        readAllCheckpoints();
+        return 0;
+    }
+
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
+    filler(buf, "checkpoints", NULL, 0);
     readAllFileNamesFromiNodeZero();
     for (int i=0 ; i<totalFileCount ; i++) {
         if (strlen(iNodeZeroFileNames[i].fileName) > 0) {
