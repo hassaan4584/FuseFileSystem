@@ -99,19 +99,22 @@ void initializeLogFile() {
     initializeSuperBlock();
     initializeINodeZero();
     
-    for (int i=1 ; i<INODE_COUNT ; i++) {
-        
-        fseek(filehd, getLocationOfiNode(i), SEEK_SET);
-        int *fileSize = (int*) malloc(sizeof(int));
-        *fileSize = 0 ;
-        fwrite((void*)fileSize, sizeof(int), 1, filehd); // writing size of the file in the 1st 4 bytes of the inode
-        
-        int blockNumber = -1;
-        for(int j=0 ; j<8 ; j++) {
-            fwrite((void*)&blockNumber, sizeof(int), 1, filehd); // initializing next 32 bytes with eigh 4 byte block numbers
+    for (int j=0; j<BLOCK_COUNT; j++) {
+        for (int i=1 ; i<INODES_PER_BLOCK ; i++) {
+            
+            fseek(filehd, getLocationOfiNode(i), SEEK_SET);
+            int *fileSize = (int*) malloc(sizeof(int));
+            *fileSize = 0 ;
+            fwrite((void*)fileSize, sizeof(int), 1, filehd); // writing size of the file in the 1st 4 bytes of the inode
+            
+            int blockNumber = -1;
+            for(int j=0 ; j<8 ; j++) {
+                fwrite((void*)&blockNumber, sizeof(int), 1, filehd); // initializing next 32 bytes with eigh 4 byte block numbers
+            }
+            fseek(filehd, 4, SEEK_CUR); // Leaving the last 4 bytes of the inode empty
         }
-        fseek(filehd, 4, SEEK_CUR); // Leaving the last 4 bytes of the inode empty
     }
+    
 
 }
 

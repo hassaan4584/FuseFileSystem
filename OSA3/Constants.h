@@ -18,9 +18,9 @@
 const int BLOCK_SIZE        = 1024;
 
 /**
- * Only for Part 1. The total number of blocks to store the information of files.
+ * Only for Part 1 and 5+. The total number of blocks to store the information of files.
  */
-const int BLOCK_COUNT       = 2;
+const int BLOCK_COUNT       = 40;
 
 /**
  * Size of each iNode in bytes.
