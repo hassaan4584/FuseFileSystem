@@ -122,7 +122,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     if (isFileFound == 0) {
         return -ENOENT;
     }
-    if ((int)size > (8*1024)) {
+    if ((int)size > (264*1024)) {
         return -EFBIG;
     }
 
@@ -141,7 +141,7 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
     // e.g if the original file size is 2024B then 1024B will be in the first block and remaining 1000B will be in the 2nd/last block
     int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
     int *blockNumber = malloc(sizeof(int));
-    for (int i=0 ; i<numberOfBlocks; i++) {
+    for (int i=0 ; i<numberOfBlocks && i<8; i++) {
         fseek(filehd, (getLocationOfiNode(inodeNumber)+4+(4*i)), SEEK_SET); // Read block number from our iNode
         fread(blockNumber, sizeof(int), 1, filehd); // loop will read/skip the 1st block
         if (*blockNumber == -1) { // previously this block pointed to no data
@@ -154,24 +154,43 @@ static int haiga_read(const char *path, char *buf, size_t size, off_t offset,
             fread((void*)(buf+(i*BLOCK_SIZE)), BLOCK_SIZE, 1, filehd);
         }
     }
-    
-//    fseek(filehd, ((inodeNumber*INODE_SIZE)+4+(4*numberOfBlocks)), SEEK_SET); // Get to the last block number from our iNode
-    fseek(filehd, (getLocationOfiNode(inodeNumber)+4+(numberOfBlocks*4)), SEEK_SET); // Get to the last block number from our iNode
-    fread(blockNumber, sizeof(int), 1, filehd); // Read last block number from our iNode
-    if (*blockNumber == -1) {
-        return numberOfBlocks*BLOCK_SIZE; // return the number of bytes that we have written so far in buffer
+    if (numberOfBlocks > 8) {
+        // read data from indirect block
+        int iNodeLocation = getLocationOfiNode(inodeNumber);
+        fseek(filehd, (iNodeLocation+36), SEEK_SET); // Get to the indirect block storage point
+        int indirectBlock = -1;
+        fread(&indirectBlock, sizeof(int), 1, filehd);
+        if (indirectBlock < 0) {
+            return numberOfBlocks*BLOCK_SIZE;
+        }
+        size_t inDirectBlockStartLocation = DATA_BLOCKS_BASE_ADDR + (indirectBlock*BLOCK_SIZE);
+        
+        for (int i=0 ; i<=numberOfBlocks-8 ; i++) {
+            fseek(filehd, (inDirectBlockStartLocation+(i*4)), SEEK_SET); // Read block number from our iNode
+            // we will read complete BLOCK_SIZE bytes from this block because it is not the last data block of this file and hence it is completely filled
+            fread((void*)(buf+((i*BLOCK_SIZE)+(8*BLOCK_SIZE))), BLOCK_SIZE, 1, filehd);
+        }
+        return numberOfBlocks*BLOCK_SIZE;
     }
+    else {
+        fseek(filehd, (getLocationOfiNode(inodeNumber)+4+(numberOfBlocks*4)), SEEK_SET); // Get to the last block number from our iNode
+        fread(blockNumber, sizeof(int), 1, filehd); // Read last block number from our iNode
+        if (*blockNumber == -1) {
+            return numberOfBlocks*BLOCK_SIZE; // return the number of bytes that we have written so far in buffer
+        }
+        
+        int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
+        size_t lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
+        fseek(filehd, lastBlockStartLocation, SEEK_SET);
+        char data[BLOCK_SIZE] = "\0";
+        int reading = fread((void*)(data), lastBlockDataSize, 1, filehd);
+        memcpy(buf, data , lastBlockDataSize);
+        int totalBytesRead = (numberOfBlocks*BLOCK_SIZE) + lastBlockDataSize;
+        
+        return totalBytesRead;
+    }
+
     
-    int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
-    size_t lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((*blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
-    fseek(filehd, lastBlockStartLocation, SEEK_SET);
-    char data[BLOCK_SIZE] = "\0";
-    int reading = fread((void*)(data), lastBlockDataSize, 1, filehd);
-    memcpy(buf, data , lastBlockDataSize);
-//    fread((void*)(buf+(numberOfBlocks*BLOCK_SIZE)), lastBlockDataSize, 1, filehd);
-    int totalBytesRead = (numberOfBlocks*BLOCK_SIZE) + lastBlockDataSize;
-    
-    return totalBytesRead;
 }
 
 

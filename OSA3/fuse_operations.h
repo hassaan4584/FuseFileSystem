@@ -84,7 +84,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
 {
     printf("WRITE FUNCTION \n");
     
-    if ((int)size > (8*1024)) {
+    if ((int)size > (264*1024)) {
         return -EFBIG;
     }
     int iNodeNumber = getiNodeNumberForFile(path);
@@ -113,7 +113,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     // e.g if the original file size is 2024B then 1024B will be in the first block and remaining 1000B will be in the 2nd/last block
     int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
     int blockNumber = -1;
-    for (int i=0 ; i<numberOfBlocks; i++) {
+    for (int i=0 ; i<numberOfBlocks && i<8; i++) {
         int iNodeLocation = getLocationOfiNode(iNodeNumber);
         fseek(filehd, ((iNodeLocation)+4+(4*i)), SEEK_SET); // Read block number from our iNode
         // Forcefully assiging the next free block to store file data
@@ -129,33 +129,59 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
         fwrite((void*)(buf+(i*BLOCK_SIZE)), BLOCK_SIZE, 1, filehd);
     }
     
-//    fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+(4*numberOfBlocks)), SEEK_SET); // Read last block number from our iNode
-    
-    fseek(filehd, (getLocationOfiNode(iNodeNumber)+4+(numberOfBlocks*4)), SEEK_SET); // Read last block number from our iNode
-    int nextFreeBlockNumber = blocksUsed;
-    blockNumber = blocksUsed; // in this block we will store new data
-    blocksUsed++;
-    fwrite((void*)&nextFreeBlockNumber, sizeof(int), 1, filehd); // pointing to the data block that will store last
-    
-    int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
-    size_t lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
-    fseek(filehd, lastBlockStartLocation, SEEK_SET);
-    size_t wrtieOffset = (numberOfBlocks*BLOCK_SIZE);
-    fwrite((void*)(buf+wrtieOffset), lastBlockDataSize, 1, filehd);
-    
-    int bytesWritten = (int)strlen(buf);
-    fseek(filehd, getLocationOfiNode(iNodeNumber), SEEK_SET); // Again Go to the inode number
-    fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
-
-    
-    //clean up the previous extra data
-    for (int i=numberOfBlocks+1 ; i<8; i++) {
+    if (numberOfBlocks > 8) {
+        // read data from indirect block
         int iNodeLocation = getLocationOfiNode(iNodeNumber);
-        fseek(filehd, ((iNodeLocation)+4+(4*i)), SEEK_SET); // Read block number from our iNode
-        int minus1 = -1;
-        fwrite(&minus1, sizeof(int), 1, filehd);
+        fseek(filehd, (iNodeLocation+36), SEEK_SET); // Get to the indirect block storage point
+        int indirectBlock = -1;
+        fread(&indirectBlock, sizeof(int), 1, filehd);
+        if (indirectBlock < 0) {
+            int bytesWritten = numberOfBlocks*BLOCK_SIZE;
+            fseek(filehd, getLocationOfiNode(iNodeNumber), SEEK_SET); // Again Go to the inode number
+            fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
+            return bytesWritten;
+        }
+        size_t inDirectBlockStartLocation = DATA_BLOCKS_BASE_ADDR + (indirectBlock*BLOCK_SIZE);
+        
+        for (int i=0 ; i<=numberOfBlocks-8 ; i++) {
+            fseek(filehd, (inDirectBlockStartLocation+(i*4)), SEEK_SET); // Read block number from our iNode
+            // we will read complete BLOCK_SIZE bytes from this block because it is not the last data block of this file and hence it is completely filled
+            fwrite((void*)(buf+((i*BLOCK_SIZE)+(8*BLOCK_SIZE))), BLOCK_SIZE, 1, filehd);
+        }
+        int bytesWritten = (int)strlen(buf);
+        fseek(filehd, getLocationOfiNode(iNodeNumber), SEEK_SET); // Again Go to the inode number
+        fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
+        return bytesWritten;
     }
-    return bytesWritten;
+    else {
+        fseek(filehd, (getLocationOfiNode(iNodeNumber)+4+(numberOfBlocks*4)), SEEK_SET); // Read last block number from our iNode
+        int nextFreeBlockNumber = blocksUsed;
+        blockNumber = blocksUsed; // in this block we will store new data
+        blocksUsed++;
+        fwrite((void*)&nextFreeBlockNumber, sizeof(int), 1, filehd); // pointing to the data block that will store last
+        
+        int lastBlockDataSize = (*fileSize) % BLOCK_SIZE; // now we will read the remaining 1000 bytes
+        size_t lastBlockStartLocation = DATA_BLOCKS_BASE_ADDR + ((blockNumber)*BLOCK_SIZE); // Read the last block number from the eight-4 bytes block numbers
+        fseek(filehd, lastBlockStartLocation, SEEK_SET);
+        size_t wrtieOffset = (numberOfBlocks*BLOCK_SIZE);
+        fwrite((void*)(buf+wrtieOffset), lastBlockDataSize, 1, filehd);
+        
+        int bytesWritten = (int)strlen(buf);
+        fseek(filehd, getLocationOfiNode(iNodeNumber), SEEK_SET); // Again Go to the inode number
+        fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
+        
+        
+        //clean up the previous extra data
+        for (int i=numberOfBlocks+1 ; i<8; i++) {
+            int iNodeLocation = getLocationOfiNode(iNodeNumber);
+            fseek(filehd, ((iNodeLocation)+4+(4*i)), SEEK_SET); // Read block number from our iNode
+            int minus1 = -1;
+            fwrite(&minus1, sizeof(int), 1, filehd);
+        }
+        return bytesWritten;
+    }
+    
+    
     
 }
 

@@ -99,7 +99,7 @@ void initializeLogFile() {
     initializeSuperBlock();
     initializeINodeZero();
     
-    for (int j=0; j<BLOCK_COUNT; j++) {
+    for (int j=0; j<BLOCK_COUNT; j ++) {
         for (int i=1 ; i<INODES_PER_BLOCK ; i++) {
             
             fseek(filehd, getLocationOfiNode(i), SEEK_SET);
