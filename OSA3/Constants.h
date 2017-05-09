@@ -33,6 +33,11 @@ const int INODE_SIZE        = 40;
 const int INODE_COUNT       = 1024;
 
 /**
+ * The number of iNodes/block.
+ */
+const int INODES_PER_BLOCK       = 25;
+
+/**
  * The size in bytes of super block.
  */
 const int SUPER_BLOCK_SIZE  = 1024;

@@ -91,7 +91,10 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     if (iNodeNumber < 0 ) {
         return 0;
     }
-    int iNodeLocation = getiNodeLocation(iNodeNumber);
+    else {
+        assignNewContainerForiNodeNumber(iNodeNumber);
+    }
+    int iNodeLocation = getLocationOfiNode(iNodeNumber);
     fseek(filehd, iNodeLocation, SEEK_SET); // Go to the inode number
     // First 4 bytes of this inode will represent size of the file
     
@@ -111,7 +114,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     int numberOfBlocks = (*fileSize)/BLOCK_SIZE; // 2024/1024 = 1
     int blockNumber = -1;
     for (int i=0 ; i<numberOfBlocks; i++) {
-        int iNodeLocation = getiNodeLocation(iNodeNumber);
+        int iNodeLocation = getLocationOfiNode(iNodeNumber);
         fseek(filehd, ((iNodeLocation)+4+(4*i)), SEEK_SET); // Read block number from our iNode
         // Forcefully assiging the next free block to store file data
         int nextFreeBlockNumber = blocksUsed;
@@ -128,7 +131,7 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     
 //    fseek(filehd, ((iNodeNumber*INODE_SIZE)+4+(4*numberOfBlocks)), SEEK_SET); // Read last block number from our iNode
     
-    fseek(filehd, (getiNodeLocation(iNodeNumber)+4+(numberOfBlocks*4)), SEEK_SET); // Read last block number from our iNode
+    fseek(filehd, (getLocationOfiNode(iNodeNumber)+4+(numberOfBlocks*4)), SEEK_SET); // Read last block number from our iNode
     int nextFreeBlockNumber = blocksUsed;
     blockNumber = blocksUsed; // in this block we will store new data
     blocksUsed++;
@@ -141,13 +144,13 @@ static int haiga_write(const char* path, const char *buf, size_t size, off_t off
     fwrite((void*)(buf+wrtieOffset), lastBlockDataSize, 1, filehd);
     
     int bytesWritten = (int)strlen(buf);
-    fseek(filehd, getiNodeLocation(iNodeNumber), SEEK_SET); // Again Go to the inode number
+    fseek(filehd, getLocationOfiNode(iNodeNumber), SEEK_SET); // Again Go to the inode number
     fwrite((void*)&bytesWritten, sizeof(int), 1, filehd); // and update the total size of the file. Currently it updates for 1 block only.
 
     
     //clean up the previous extra data
     for (int i=numberOfBlocks+1 ; i<8; i++) {
-        int iNodeLocation = getiNodeLocation(iNodeNumber);
+        int iNodeLocation = getLocationOfiNode(iNodeNumber);
         fseek(filehd, ((iNodeLocation)+4+(4*i)), SEEK_SET); // Read block number from our iNode
         int minus1 = -1;
         fwrite(&minus1, sizeof(int), 1, filehd);
